@@ -17,6 +17,8 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
+# Brainstorming session artifacts
+
 # Build/release artifacts
 dist/
 release/
