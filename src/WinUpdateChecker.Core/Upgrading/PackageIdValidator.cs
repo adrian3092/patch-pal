@@ -13,6 +13,6 @@ public static partial class PackageIdValidator
 {
     public static bool IsSafe(string? id) => id is not null && SafeId().IsMatch(id);
 
-    [GeneratedRegex(@"^[\w.+-]+$")]
+    [GeneratedRegex(@"^[A-Za-z0-9_.+-]+\z")]
     private static partial Regex SafeId();
 }

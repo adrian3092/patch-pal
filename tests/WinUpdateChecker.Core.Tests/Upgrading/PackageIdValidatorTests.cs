@@ -21,6 +21,8 @@ public class PackageIdValidatorTests
     [InlineData("pkg with space")]
     [InlineData("")]
     [InlineData(null)]
+    [InlineData("Git.Git\n")]   // trailing newline must not slip through \z
+    [InlineData("пакет")]       // non-ASCII ids are rejected
     public void IsSafe_RejectsInjectionAttempts(string? id)
         => Assert.False(PackageIdValidator.IsSafe(id));
 }

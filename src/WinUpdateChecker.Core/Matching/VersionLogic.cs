@@ -23,6 +23,9 @@ public static partial class VersionLogic
 
     private static string Clean(string? text)
     {
+        // Deviation from v1: v1 stripped non-version chars globally, so "8.0.8 (x64)"
+        // became "8.0.864" and hid real updates. Instead, replace non-version chars with
+        // spaces and take the first dotted token.
         var replaced = NonVersionChars().Replace(text ?? "", " ");
         var token = replaced.Split(' ', StringSplitOptions.RemoveEmptyEntries)
                              .FirstOrDefault(t => t.Contains('.')) ?? "";
