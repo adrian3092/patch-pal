@@ -24,3 +24,8 @@ dist/
 release/
 *.zip
 SHA256SUMS.txt
+
+# .NET build artifacts
+bin/
+obj/
+*.binlog
