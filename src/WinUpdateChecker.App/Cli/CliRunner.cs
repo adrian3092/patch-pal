@@ -1,3 +1,4 @@
+using System.IO;
 using WinUpdateChecker.Core.Cli;
 using WinUpdateChecker.Core.Export;
 using WinUpdateChecker.Core.Scanning;
@@ -20,6 +21,9 @@ public static class CliRunner
 
     public static async Task<int> RunAsync(CliOptions options)
     {
+        try { Console.OutputEncoding = System.Text.Encoding.UTF8; }
+        catch (IOException) { /* no console handle — keep default */ }
+
         if (options.Error is not null)
         {
             Console.Error.WriteLine($"error: {options.Error}");

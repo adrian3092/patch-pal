@@ -10,15 +10,19 @@ public static class Program
     [DllImport("kernel32.dll")]
     private static extern bool AttachConsole(int processId);
 
+    [DllImport("kernel32.dll")]
+    private static extern bool AllocConsole();
+
     [STAThread]
     public static int Main(string[] args)
     {
         var options = CliOptions.Parse(args);
         if (options.IsHeadless)
         {
-            // A WinExe has no console; borrow the parent shell's so output is visible
-            // when invoked from PowerShell/cmd or a scheduled task.
-            AttachConsole(AttachParentProcess);
+            // Borrow the parent shell's console; if there is none (Task Scheduler,
+            // Explorer), allocate one so output and errors are not silently lost.
+            if (!AttachConsole(AttachParentProcess))
+                AllocConsole();
             return Cli.CliRunner.RunAsync(options).GetAwaiter().GetResult();
         }
 

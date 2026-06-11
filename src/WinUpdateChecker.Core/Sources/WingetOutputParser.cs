@@ -28,7 +28,9 @@ public static partial class WingetOutputParser
         var sourceCol = header.IndexOf("Source", StringComparison.Ordinal);
 
         var upgrades = new List<UpgradeCandidate>();
-        for (var i = headerIndex + 2; i < lines.Length; i++) // +2 skips the dashed separator
+        // Start just past the header; the dashed separator line (and any empty tokens
+        // produced by splitting \r\n input) are skipped by the guards below.
+        for (var i = headerIndex + 1; i < lines.Length; i++)
         {
             var line = lines[i];
             if (string.IsNullOrWhiteSpace(line)) continue;
