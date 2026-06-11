@@ -1,0 +1,7 @@
+<Page
+    x:Class="WinUpdateChecker.App.Views.Pages.AllAppsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="All apps">
+    <TextBlock Margin="24" FontSize="14" Text="All apps page" />
+</Page>
