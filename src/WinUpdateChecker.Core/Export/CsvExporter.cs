@@ -23,7 +23,7 @@ public static class CsvExporter
         => File.WriteAllText(path, Render(rows), Encoding.UTF8);
 
     private static string Quote(string field)
-        => field.Contains(',') || field.Contains('"') || field.Contains('\n')
+        => field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r')
             ? $"\"{field.Replace("\"", "\"\"")}\""
             : field;
 }

@@ -12,7 +12,11 @@ public static partial class WingetOutputParser
     public static IReadOnlyList<UpgradeCandidate> Parse(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw)) return [];
-        var lines = raw.Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
+        // Winget uses bare \r (carriage return) as a line separator when stdout is
+        // redirected (progress-spinner animation), so we split on any CR/LF combination.
+        var lines = raw.Split(['\r', '\n'], StringSplitOptions.None)
+                       .Select(l => l.TrimEnd('\r', '\n'))
+                       .ToArray();
 
         var headerIndex = Array.FindIndex(lines, l => HeaderPattern().IsMatch(l));
         if (headerIndex < 0) return [];

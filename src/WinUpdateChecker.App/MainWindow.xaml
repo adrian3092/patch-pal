@@ -5,8 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WinUpdateChecker.App"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="WinUpdateChecker" Width="1100" Height="650">
     <Grid>
-
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                   FontSize="16" Foreground="Gray"
+                   Text="WinUpdateChecker v2 — GUI arrives in Plan 2. Use --no-gui for the console." />
     </Grid>
 </Window>
