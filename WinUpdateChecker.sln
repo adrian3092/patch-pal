@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{DE9EE5DA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinUpdateChecker.Core.Tests", "tests\WinUpdateChecker.Core.Tests\WinUpdateChecker.Core.Tests.csproj", "{F86DA46A-BDA7-49D6-A8BA-11D5E8186E8D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinUpdateChecker.App.Tests", "tests\WinUpdateChecker.App.Tests\WinUpdateChecker.App.Tests.csproj", "{227857F2-4481-4683-81FA-DC07601B9BEE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +36,15 @@ Global
 		{F86DA46A-BDA7-49D6-A8BA-11D5E8186E8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F86DA46A-BDA7-49D6-A8BA-11D5E8186E8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F86DA46A-BDA7-49D6-A8BA-11D5E8186E8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{227857F2-4481-4683-81FA-DC07601B9BEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{227857F2-4481-4683-81FA-DC07601B9BEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{227857F2-4481-4683-81FA-DC07601B9BEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{227857F2-4481-4683-81FA-DC07601B9BEE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{18E506C2-E61E-4040-9E77-D257CEA0A913} = {A6B9DACC-8020-4149-8E68-4D93801735CC}
 		{02A23E4F-736B-477D-B872-A9463160D2DA} = {A6B9DACC-8020-4149-8E68-4D93801735CC}
 		{F86DA46A-BDA7-49D6-A8BA-11D5E8186E8D} = {DE9EE5DA-D85F-4946-99AB-64B257F9BC6B}
+		{227857F2-4481-4683-81FA-DC07601B9BEE} = {DE9EE5DA-D85F-4946-99AB-64B257F9BC6B}
 	EndGlobalSection
 EndGlobal

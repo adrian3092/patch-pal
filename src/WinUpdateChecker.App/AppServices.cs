@@ -13,7 +13,7 @@ namespace WinUpdateChecker.App;
 public static class AppServices
 {
     public static SettingsStore SettingsStore { get; } = new();
-    public static AppSettings Settings { get; set; }
+    public static AppSettings Settings { get; set; } = null!;
     public static HistoryStore HistoryStore { get; } = new();
     public static IReadOnlyList<IPackageSource> Sources { get; }
     public static ScanService ScanService { get; }
