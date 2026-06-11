@@ -63,6 +63,10 @@ public static class ReportMerger
             if (string.Equals(up.Name, prog.Name, StringComparison.OrdinalIgnoreCase))
                 return up;
 
+        // Guard fuzzy passes against empty names — mirrors v1 PowerShell truthiness check.
+        // An empty prog.Name would build a \b\b regex that matches any upgrade name.
+        if (string.IsNullOrEmpty(prog.Name)) return null;
+
         var progBase = NameNormalizer.GetMatchBase(prog.Name);
         foreach (var up in upgrades)
         {

@@ -89,4 +89,17 @@ public class ReportMergerTests
         var firstNonUpdateIndex = rows.ToList().FindIndex(r => !r.IsUpdate);
         Assert.All(rows.Skip(firstNonUpdateIndex), r => Assert.False(r.IsUpdate));
     }
+
+    [Fact]
+    public void EmptyProgramName_DoesNotFuzzyMatchAnything()
+    {
+        // v1 guarded fuzzy passes against empty names; "" would otherwise build a \b\b regex
+        // that matches any upgrade and steals its source-only row.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("", "1.0", null)],
+            [new UpgradeCandidate("some-cli-tool", "some-cli-tool", "1.0", "2.0", "scoop")],
+            ["scoop"]);
+        Assert.Contains(rows, r => r.Name == "some-cli-tool" && r.Status == "Update available (scoop only)");
+        Assert.Contains(rows, r => r.Name == "" && !r.IsUpdate);
+    }
 }
