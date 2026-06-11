@@ -34,6 +34,11 @@ public sealed class UpgradeRunner(IEnumerable<IPackageSource> sources)
         {
             throw;
         }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            return new UpgradeResult(displayName, packageId, source, false, null,
+                "Elevation was declined (UAC prompt cancelled).", "");
+        }
         catch (Exception ex)
         {
             // Most commonly the user declined the UAC elevation prompt.

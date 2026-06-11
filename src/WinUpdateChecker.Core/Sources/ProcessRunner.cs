@@ -7,25 +7,29 @@ public sealed class ProcessRunner : IProcessRunner
 {
     public bool CommandExists(string command)
     {
-        var pathExt = (Environment.GetEnvironmentVariable("PATHEXT") ?? ".EXE;.CMD;.BAT;.COM")
-            .Split(';', StringSplitOptions.RemoveEmptyEntries);
-        var paths = (Environment.GetEnvironmentVariable("PATH") ?? "")
-            .Split(';', StringSplitOptions.RemoveEmptyEntries);
-        foreach (var dir in paths)
+        // v1 used PowerShell's Get-Command, which resolves App Execution Aliases
+        // (winget) and shims (scoop.cmd). File.Exists over PATH misses alias reparse
+        // stubs, so ask where.exe — its exit code is authoritative.
+        try
         {
-            foreach (var ext in pathExt)
+            var psi = new ProcessStartInfo("where.exe", command)
             {
-                try
-                {
-                    if (File.Exists(Path.Combine(dir.Trim(), command + ext))) return true;
-                }
-                catch (ArgumentException)
-                {
-                    // malformed PATH entry — skip it
-                }
-            }
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            };
+            using var proc = Process.Start(psi);
+            if (proc is null) return false;
+            proc.StandardOutput.ReadToEnd();
+            proc.StandardError.ReadToEnd();
+            proc.WaitForExit();
+            return proc.ExitCode == 0;
         }
-        return false;
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public async Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken ct = default)
