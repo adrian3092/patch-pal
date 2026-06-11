@@ -9,7 +9,7 @@ public class ScoopOutputParserTests
         "----    -----------------  --------------     --------------------  ----\n" +
         "7zip    23.01              24.08\n" +
         "git     2.44.0             2.45.2             \n" +
-        "neovim  0.9.5              0.9.5\n";  // current == latest -> not an upgrade
+        "neovim  0.9.5              0.9.5                                   \n";  // current == latest -> not an upgrade
 
     [Fact]
     public void Parse_ExtractsOnlyRowsWithNewerVersions()
