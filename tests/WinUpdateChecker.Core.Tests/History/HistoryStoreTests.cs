@@ -44,6 +44,7 @@ public class HistoryStoreTests : IDisposable
         File.WriteAllText(Path.Combine(_dir.FullName, "history.json"), "[{ broken");
         var store = Store();
         Assert.Empty(store.Load());
+        Assert.True(File.Exists(Path.Combine(_dir.FullName, "history.json.bak")));
         store.Append(Entry());                                   // store still usable
         Assert.Single(store.Load());
     }
