@@ -6,6 +6,7 @@ public sealed class FakeProcessRunner : IProcessRunner
 {
     public List<(string FileName, string Arguments, bool Elevated)> Calls { get; } = [];
     public string StdOut { get; set; } = "";
+    public string StdErr { get; set; } = "";
     public int ExitCode { get; set; }
     public bool Exists { get; set; } = true;
     public Exception? ThrowOnRun { get; set; }
@@ -16,7 +17,7 @@ public sealed class FakeProcessRunner : IProcessRunner
     {
         if (ThrowOnRun is not null) throw ThrowOnRun;
         Calls.Add((fileName, arguments, false));
-        return Task.FromResult(new ProcessResult(ExitCode, StdOut, ""));
+        return Task.FromResult(new ProcessResult(ExitCode, StdOut, StdErr));
     }
 
     public Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default)

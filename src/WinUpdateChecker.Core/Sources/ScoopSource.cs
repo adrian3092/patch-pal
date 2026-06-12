@@ -12,7 +12,10 @@ public sealed class ScoopSource(IProcessRunner runner) : IPackageSource
     public async Task<IReadOnlyList<UpgradeCandidate>> ListOutdatedAsync(CancellationToken ct = default)
     {
         var result = await runner.RunAsync("scoop", "status", ct);
-        return ScoopOutputParser.Parse(result.StdOut);
+        var upgrades = ScoopOutputParser.Parse(result.StdOut);
+        if (upgrades.Count == 0 && result.ExitCode != 0)
+            throw new InvalidOperationException(SourceErrors.FirstLine(result.StdErr) ?? $"exit code {result.ExitCode}");
+        return upgrades;
     }
 
     // Scoop runs as the current user (no elevation). The id is interpolated into a

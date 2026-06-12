@@ -61,6 +61,30 @@ public class PackageSourceTests
         Assert.Equal("7zip", result[0].Id);
     }
 
+    [Fact]
+    public async Task ListOutdated_NonZeroExitWithNoTable_Throws()
+    {
+        var runner = new FakeProcessRunner { ExitCode = 1, StdOut = "" };
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => new WingetSource(runner).ListOutdatedAsync());
+        Assert.Contains("exit code 1", ex.Message);
+    }
+
+    [Fact]
+    public async Task ListOutdated_NonZeroExitWithValidTable_StillReturnsUpgrades()
+    {
+        var runner = new FakeProcessRunner { ExitCode = -1978335162, StdOut = "7zip|23.1.0|24.8.0|false\n" };
+        var result = await new ChocoSource(runner).ListOutdatedAsync();
+        Assert.Single(result);
+    }
+
+    [Fact]
+    public async Task ListOutdated_ZeroExitWithNoTable_ReturnsEmpty()
+    {
+        var runner = new FakeProcessRunner { ExitCode = 0, StdOut = "No installed package found matching input criteria.\n" };
+        Assert.Empty(await new WingetSource(runner).ListOutdatedAsync());
+    }
+
     [Theory]
     [InlineData("winget", "winget")]
     [InlineData("scoop", "scoop")]

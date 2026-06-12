@@ -12,7 +12,10 @@ public sealed class ChocoSource(IProcessRunner runner) : IPackageSource
     public async Task<IReadOnlyList<UpgradeCandidate>> ListOutdatedAsync(CancellationToken ct = default)
     {
         var result = await runner.RunAsync("choco", "outdated -r --no-color", ct);
-        return ChocoOutputParser.Parse(result.StdOut);
+        var upgrades = ChocoOutputParser.Parse(result.StdOut);
+        if (upgrades.Count == 0 && result.ExitCode != 0)
+            throw new InvalidOperationException(SourceErrors.FirstLine(result.StdErr) ?? $"exit code {result.ExitCode}");
+        return upgrades;
     }
 
     public Task<ProcessResult> RunUpgradeAsync(string packageId, CancellationToken ct = default)
