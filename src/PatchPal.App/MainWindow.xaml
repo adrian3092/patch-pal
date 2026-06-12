@@ -10,6 +10,7 @@
     MinWidth="900"
     MinHeight="480"
     FontFamily="Segoe UI Variable Text, Segoe UI"
+    Icon="pack://application:,,,/Assets/AppIcon.png"
     WindowBackdropType="Mica"
     ExtendsContentIntoTitleBar="True"
     WindowStartupLocation="CenterScreen">
@@ -20,7 +21,11 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="Patch Pal" />
+        <ui:TitleBar Grid.Row="0" Title="Patch Pal">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/Assets/AppIcon.png" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
 
         <ui:NavigationView
             x:Name="RootNavigation"

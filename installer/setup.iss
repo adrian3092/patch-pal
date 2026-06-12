@@ -37,6 +37,7 @@ OutputDir=..\dist
 OutputBaseFilename=PatchPal-Setup-{#MyAppVersion}-{#MyAppArch}
 Compression=lzma2
 SolidCompression=yes
+SetupIconFile=..\src\PatchPal.App\PatchPal.ico
 WizardStyle=modern
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
