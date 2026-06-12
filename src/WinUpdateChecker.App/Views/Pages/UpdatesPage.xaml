@@ -2,6 +2,165 @@
     x:Class="WinUpdateChecker.App.Views.Pages.UpdatesPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:WinUpdateChecker.App.ViewModels"
     Title="Updates">
-    <TextBlock Margin="24" FontSize="14" Text="Updates page" />
+
+    <Grid Margin="20,12,20,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Page header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Updates available" FontSize="22" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding LastScanText}" Margin="14,6,0,0" Opacity="0.6" FontSize="12" />
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                <ui:Button Command="{Binding ScanCommand}" Margin="0,0,8,0">
+                    <ui:Button.Style>
+                        <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                            <Setter Property="Content" Value="Scan" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsScanning}" Value="True">
+                                    <Setter Property="Content" Value="Cancel" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:Button.Style>
+                </ui:Button>
+                <ui:Button Appearance="Primary" Command="{Binding UpdateAllCommand}"
+                           Content="{Binding UpdateCount}" ContentStringFormat="Update all ({0})" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Source warnings -->
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Warnings}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <ui:InfoBar Severity="Warning" IsOpen="True" IsClosable="False" Message="{Binding}" Margin="0,0,0,8" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Selection / filter bar -->
+        <DockPanel Grid.Row="2" Margin="0,0,0,10">
+            <ui:Button DockPanel.Dock="Left" Content="Update selected" Command="{Binding UpdateSelectedCommand}" />
+            <ui:TextBox DockPanel.Dock="Right" Width="240" HorizontalAlignment="Right"
+                        PlaceholderText="Filter apps…" ClearButtonEnabled="True"
+                        Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" />
+        </DockPanel>
+
+        <!-- Rows -->
+        <Grid Grid.Row="3">
+            <ListView x:Name="RowsList" ItemsSource="{Binding Rows}"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                      VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Focusable" Value="True" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:UpdateRowViewModel}">
+                        <Border CornerRadius="6" Padding="12,9" Margin="0,0,0,6"
+                                Background="{DynamicResource ControlFillColorDefaultBrush}">
+                            <DockPanel>
+                                <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" />
+                                <!-- right side: state -->
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border CornerRadius="9" Padding="8,1" Margin="0,0,12,0"
+                                            Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                                        <TextBlock Text="{Binding Source}" FontSize="11" Opacity="0.8" />
+                                    </Border>
+                                    <!-- Idle/Failed: button. Updating: progress. Succeeded: check. -->
+                                    <ui:Button Content="Update"
+                                               Command="{Binding DataContext.UpdateOneCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                               CommandParameter="{Binding}"
+                                               Visibility="{Binding CanUpdate, Converter={StaticResource BoolToVis}}" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding State}" Value="Updating">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <ui:ProgressRing IsIndeterminate="True" Width="18" Height="18" Margin="0,0,8,0" />
+                                        <TextBlock Text="{Binding StateMessage}" VerticalAlignment="Center" Opacity="0.7" FontSize="12" />
+                                    </StackPanel>
+                                    <TextBlock Text="✓ Updated" Foreground="{DynamicResource SystemFillColorSuccessBrush}" VerticalAlignment="Center" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding State}" Value="Succeeded">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock VerticalAlignment="Center" FontSize="12"
+                                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                               ToolTip="{Binding Log}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding State}" Value="Failed">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                        <Run Text="✕ " /><Run Text="{Binding StateMessage, Mode=OneWay}" />
+                                    </TextBlock>
+                                </StackPanel>
+                                <!-- middle: name + versions -->
+                                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Current}" Opacity="0.6" FontSize="12" />
+                                        <TextBlock Text=" → " Opacity="0.6" FontSize="12" />
+                                        <TextBlock Text="{Binding Available}" FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SystemFillColorSuccessBrush}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- Empty state -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding UpdateCount}" Value="0" />
+                                    <Condition Binding="{Binding IsScanning}" Value="False" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <ui:SymbolIcon Symbol="CheckmarkCircle48" FontSize="48" Opacity="0.5" HorizontalAlignment="Center" />
+                <TextBlock Text="Everything is up to date" FontSize="16" Margin="0,10,0,0" Opacity="0.7" />
+            </StackPanel>
+        </Grid>
+    </Grid>
 </Page>
