@@ -1,6 +1,6 @@
 # Code signing
 
-This project ships unsigned by default. Signing is optional but it removes the **"Windows protected your PC"** SmartScreen prompt and the **execution-policy** warning some users see, which significantly improves first-run trust on a public download.
+This project ships unsigned by default. Signing is optional but it removes the **"Windows protected your PC"** SmartScreen prompt, which significantly improves first-run trust on a public download.
 
 There are three realistic paths.
 
@@ -24,15 +24,15 @@ There are three realistic paths.
 2. Submit your GitHub repo URL. Approval typically takes a few business days.
 3. Once approved, in the SignPath UI:
    - Create a **Project** with slug `win-update-checker`.
-   - Create an **Artifact configuration** for the installer (`*.exe`).
+   - Create an **Artifact configuration** for the installer (`WinUpdateChecker-Setup-*.exe`).
    - Create a **Signing policy** named `release-signing` that uses your certificate.
    - Generate a **CI API token** and add it to your GitHub repo secrets as `SIGNPATH_API_TOKEN`.
 4. In `.github/workflows/release.yml`, uncomment the **"Submit signing request"** block and fill in your `organization-id`. Push a new tag — CI will upload the unsigned installer, SignPath signs it, the workflow downloads the signed result, and the release is published with a signed setup.exe.
 
 ### What gets signed
 
-- The Inno Setup installer (`WinUpdateChecker-Setup-*.exe`).
-- Optionally `UpdateChecker.ps1` itself (configure a second artifact configuration).
+- The Inno Setup installers (`WinUpdateChecker-Setup-*-x64.exe` / `-arm64.exe`).
+- Optionally the portable `WinUpdateChecker.exe` itself (configure a second artifact configuration).
 
 ---
 
@@ -40,13 +40,14 @@ There are three realistic paths.
 
 If you want to sign locally without depending on SignPath, buy an OV ($200–400/yr) or EV ($300–600/yr) code-signing certificate from DigiCert, SSL.com, Sectigo, or similar. EV certificates skip the SmartScreen "reputation building" period entirely.
 
-After installing the cert in `Cert:\CurrentUser\My`:
+After installing the cert in `Cert:\CurrentUser\My`, sign the published exe with `signtool` (from the Windows SDK):
 
 ```powershell
-.\tools\Sign-Script.ps1 -CertSubject "Your Name"
+signtool sign /n "Your Name" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
+  dist\publish-x64\WinUpdateChecker.exe
 ```
 
-The helper signs `UpdateChecker.ps1` with SHA-256 + an RFC3161 timestamp so the signature stays valid after the cert expires.
+The RFC3161 timestamp (`/tr`) keeps the signature valid after the cert expires.
 
 To sign the Inno Setup installer locally, configure Inno Setup's **Tools → Configure Sign Tools** and add a `SignTool` directive to `installer/setup.iss`.
 
@@ -68,7 +69,7 @@ $store.Open('ReadWrite')
 $store.Add($cert)
 $store.Close()
 
-.\tools\Sign-Script.ps1 -CertSubject "WinUpdateChecker-Dev"
+signtool sign /n "WinUpdateChecker-Dev" /fd SHA256 dist\publish-x64\WinUpdateChecker.exe
 ```
 
 A self-signed cert is **not** trusted by anyone else's machine. Useful only for verifying the signing flow before you have a real cert.
@@ -78,8 +79,8 @@ A self-signed cert is **not** trusted by anyone else's machine. Useful only for 
 ## Verifying a signature
 
 ```powershell
-Get-AuthenticodeSignature .\UpdateChecker.ps1 | Format-List *
-Get-AuthenticodeSignature .\WinUpdateChecker-Setup-1.0.0.exe | Format-List *
+Get-AuthenticodeSignature .\WinUpdateChecker.exe | Format-List *
+Get-AuthenticodeSignature .\WinUpdateChecker-Setup-2.0.0-x64.exe | Format-List *
 ```
 
 A trusted signature shows `Status: Valid` and a non-empty `TimeStamperCertificate`.
