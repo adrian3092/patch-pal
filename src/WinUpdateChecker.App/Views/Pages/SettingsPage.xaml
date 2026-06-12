@@ -2,6 +2,55 @@
     x:Class="WinUpdateChecker.App.Views.Pages.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:WinUpdateChecker.App.ViewModels"
     Title="Settings">
-    <TextBlock Margin="24" FontSize="14" Text="Settings page" />
+    <StackPanel Margin="20,12,20,12" MaxWidth="680" HorizontalAlignment="Left">
+        <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,14" />
+
+        <TextBlock Text="Appearance" FontWeight="SemiBold" Opacity="0.7" Margin="0,0,0,6" />
+        <Border CornerRadius="6" Padding="14,10" Background="{DynamicResource ControlFillColorDefaultBrush}" Margin="0,0,0,16">
+            <DockPanel>
+                <TextBlock Text="Theme" VerticalAlignment="Center" />
+                <ComboBox DockPanel.Dock="Right" HorizontalAlignment="Right" Width="140"
+                          ItemsSource="{Binding ThemeChoices}" SelectedItem="{Binding SelectedTheme}" />
+            </DockPanel>
+        </Border>
+
+        <TextBlock Text="Scanning" FontWeight="SemiBold" Opacity="0.7" Margin="0,0,0,6" />
+        <Border CornerRadius="6" Padding="14,10" Background="{DynamicResource ControlFillColorDefaultBrush}" Margin="0,0,0,6">
+            <DockPanel>
+                <TextBlock Text="Scan on launch" VerticalAlignment="Center" />
+                <ui:ToggleSwitch DockPanel.Dock="Right" HorizontalAlignment="Right" IsChecked="{Binding ScanOnLaunch}" />
+            </DockPanel>
+        </Border>
+        <Border CornerRadius="6" Padding="14,10" Background="{DynamicResource ControlFillColorDefaultBrush}" Margin="0,0,0,16">
+            <DockPanel>
+                <StackPanel>
+                    <TextBlock Text="Include Windows system components" VerticalAlignment="Center" />
+                    <TextBlock Text="Show hotfixes, runtimes, and hidden child entries" Opacity="0.55" FontSize="12" />
+                </StackPanel>
+                <ui:ToggleSwitch DockPanel.Dock="Right" HorizontalAlignment="Right" IsChecked="{Binding IncludeSystemComponents}" />
+            </DockPanel>
+        </Border>
+
+        <TextBlock Text="Package sources" FontWeight="SemiBold" Opacity="0.7" Margin="0,0,0,6" />
+        <ItemsControl ItemsSource="{Binding Sources}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:SourceToggleViewModel}">
+                    <Border CornerRadius="6" Padding="14,10" Background="{DynamicResource ControlFillColorDefaultBrush}" Margin="0,0,0,6">
+                        <DockPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DisplayName}" />
+                                <TextBlock Text="{Binding InstalledText}" Opacity="0.5" FontSize="12" Margin="10,2,0,0" />
+                            </StackPanel>
+                            <ui:ToggleSwitch DockPanel.Dock="Right" HorizontalAlignment="Right"
+                                             IsChecked="{Binding IsEnabled}" IsEnabled="{Binding IsInstalled}" />
+                        </DockPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="Changes apply on the next scan." Opacity="0.5" FontSize="12" Margin="2,4,0,0" />
+    </StackPanel>
 </Page>
