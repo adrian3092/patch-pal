@@ -1,20 +1,25 @@
 ; WinUpdateChecker installer script (Inno Setup 6).
-; Compile with: ISCC.exe installer\setup.iss
-; CI overrides MyAppVersion via:  ISCC.exe /DMyAppVersion=1.2.3 installer\setup.iss
+; CI builds one installer per architecture:
+;   ISCC.exe /DMyAppVersion=2.0.0 /DMyAppArch=x64   /DMySourceDir=..\dist\publish-x64   installer\setup.iss
+;   ISCC.exe /DMyAppVersion=2.0.0 /DMyAppArch=arm64 /DMySourceDir=..\dist\publish-arm64 installer\setup.iss
 
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.0-dev"
+  #define MyAppVersion "0.0.0-dev"
+#endif
+#ifndef MyAppArch
+  #define MyAppArch "x64"
+#endif
+#ifndef MySourceDir
+  #define MySourceDir "..\dist\publish-x64"
 #endif
 
 #define MyAppName        "WinUpdateChecker"
 #define MyAppPublisher   "WinUpdateChecker contributors"
 #define MyAppURL         "https://github.com/adrian3092/win-update-checker"
-#define MyAppExeName     "Run.bat"
+#define MyAppExeName     "WinUpdateChecker.exe"
 
 [Setup]
-; AppId uniquely identifies this application. Regenerate ONCE for your own fork
-; (Tools -> Generate GUID in the Inno Setup IDE) and never change it again, or
-; uninstall/upgrade detection will break.
+; Same AppId as v1 so installing v2 upgrades an existing v1 install in place.
 AppId={{60cbe8cd-e316-4bc8-9a92-96305ec2c7d2}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -27,16 +32,19 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
 OutputDir=..\dist
-OutputBaseFilename=WinUpdateChecker-Setup-{#MyAppVersion}
+OutputBaseFilename=WinUpdateChecker-Setup-{#MyAppVersion}-{#MyAppArch}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-; x64compatible covers both x64 and ARM64 — installs to {pf64} on either.
-; ArchitecturesAllowed is intentionally unset so the installer also runs on
-; legacy 32-bit Windows; the script itself is architecture-agnostic.
+#if MyAppArch == "arm64"
+ArchitecturesAllowed=arm64
+ArchitecturesInstallIn64BitMode=arm64
+#else
+ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 UninstallDisplayName={#MyAppName} {#MyAppVersion}
 UninstallDisplayIcon={app}\{#MyAppExeName}
 VersionInfoVersion={#MyAppVersion}
@@ -51,18 +59,21 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\UpdateChecker.ps1"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\Run.bat";           DestDir: "{app}"; Flags: ignoreversion
-Source: "..\Run-Console.bat";   DestDir: "{app}"; Flags: ignoreversion
-Source: "..\README.md";         DestDir: "{app}"; Flags: ignoreversion
-Source: "..\LICENSE";           DestDir: "{app}"; Flags: ignoreversion
-Source: "..\CHANGELOG.md";      DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MySourceDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\README.md";    DestDir: "{app}"; Flags: ignoreversion
+Source: "..\LICENSE";      DestDir: "{app}"; Flags: ignoreversion
+Source: "..\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
+
+[InstallDelete]
+; Purge v1 (PowerShell) files when upgrading an existing install.
+Type: files; Name: "{app}\UpdateChecker.ps1"
+Type: files; Name: "{app}\Run.bat"
+Type: files; Name: "{app}\Run-Console.bat"
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}";       Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
-Name: "{autoprograms}\{#MyAppName} (Console)"; Filename: "{app}\Run-Console.bat"; WorkingDir: "{app}"
-Name: "{autoprograms}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}";        Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\{#MyAppName}";            Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
+Name: "{autoprograms}\Uninstall {#MyAppName}";  Filename: "{uninstallexe}"
+Name: "{autodesktop}\{#MyAppName}";             Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
