@@ -29,3 +29,6 @@ SHA256SUMS.txt
 bin/
 obj/
 *.binlog
+
+# Test/smoke artifacts
+smoke-*.txt
