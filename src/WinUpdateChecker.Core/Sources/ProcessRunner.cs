@@ -43,8 +43,31 @@ public sealed class ProcessRunner : IProcessRunner
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
         };
-        using var proc = Process.Start(psi)
-            ?? throw new InvalidOperationException($"Failed to start {fileName}");
+
+        Process? proc;
+        try
+        {
+            proc = Process.Start(psi);
+        }
+        catch (System.ComponentModel.Win32Exception) when (!fileName.Contains('\\') && !fileName.Contains('/'))
+        {
+            // App Execution Aliases (winget) are reparse stubs that direct CreateProcess
+            // cannot always launch (observed: Explorer-launched GUI). cmd.exe resolves
+            // them reliably. fileName/arguments are fixed strings + validated package ids,
+            // so no untrusted text reaches this command line.
+            var viaCmd = new ProcessStartInfo("cmd.exe", $"/d /s /c \"{fileName} {arguments}\"")
+            {
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
+            };
+            proc = Process.Start(viaCmd);
+        }
+        if (proc is null) throw new InvalidOperationException($"Failed to start {fileName}");
+        using var _ = proc;
         var stdOut = proc.StandardOutput.ReadToEndAsync(ct);
         var stdErr = proc.StandardError.ReadToEndAsync(ct);
         await proc.WaitForExitAsync(ct);

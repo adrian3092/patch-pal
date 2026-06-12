@@ -42,7 +42,10 @@ public sealed partial class UpdatesViewModel : ObservableObject
     private string _lastScanText = "Not scanned yet";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateAllLabel))]
     private int _updateCount;
+
+    public string UpdateAllLabel => $"Update all ({UpdateCount})";
 
     public UpdatesViewModel() : this(
         AppServices.ScanService, AppServices.BatchUpgradeRunner, AppServices.ScanState, AppServices.Settings)
@@ -69,7 +72,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
         {
             var options = new ScanOptions(
                 AllSourcesExcept(_settings.DisabledSources), _settings.IncludeSystemComponents);
-            var result = await _scanService.ScanAsync(options, _scanCts.Token);
+            var result = await Task.Run(() => _scanService.ScanAsync(options, _scanCts.Token), _scanCts.Token);
 
             _scanState.LastResult = result;
             _scanState.LastScanTime = DateTimeOffset.Now;

@@ -21,6 +21,9 @@
                 <TextBlock Text="{Binding LastScanText}" Margin="14,6,0,0" Opacity="0.6" FontSize="12" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                <ui:ProgressRing IsIndeterminate="True" Width="20" Height="20" Margin="0,0,10,0"
+                                 VerticalAlignment="Center"
+                                 Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}" />
                 <ui:Button Command="{Binding ScanCommand}" Margin="0,0,8,0">
                     <ui:Button.Style>
                         <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
@@ -34,7 +37,7 @@
                     </ui:Button.Style>
                 </ui:Button>
                 <ui:Button Appearance="Primary" Command="{Binding UpdateAllCommand}"
-                           Content="{Binding UpdateCount}" ContentStringFormat="Update all ({0})" />
+                           Content="{Binding UpdateAllLabel}" />
             </StackPanel>
         </DockPanel>
 
