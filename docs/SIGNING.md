@@ -24,15 +24,15 @@ There are three realistic paths.
 2. Submit your GitHub repo URL. Approval typically takes a few business days.
 3. Once approved, in the SignPath UI:
    - Create a **Project** with slug `win-update-checker`.
-   - Create an **Artifact configuration** for the installer (`WinUpdateChecker-Setup-*.exe`).
+   - Create an **Artifact configuration** for the installer (`PatchPal-Setup-*.exe`).
    - Create a **Signing policy** named `release-signing` that uses your certificate.
    - Generate a **CI API token** and add it to your GitHub repo secrets as `SIGNPATH_API_TOKEN`.
 4. In `.github/workflows/release.yml`, uncomment the **"Submit signing request"** block and fill in your `organization-id`. Push a new tag — CI will upload the unsigned installer, SignPath signs it, the workflow downloads the signed result, and the release is published with a signed setup.exe.
 
 ### What gets signed
 
-- The Inno Setup installers (`WinUpdateChecker-Setup-*-x64.exe` / `-arm64.exe`).
-- Optionally the portable `WinUpdateChecker.exe` itself (configure a second artifact configuration).
+- The Inno Setup installers (`PatchPal-Setup-*-x64.exe` / `-arm64.exe`).
+- Optionally the portable `PatchPal.exe` itself (configure a second artifact configuration).
 
 ---
 
@@ -44,7 +44,7 @@ After installing the cert in `Cert:\CurrentUser\My`, sign the published exe with
 
 ```powershell
 signtool sign /n "Your Name" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
-  dist\publish-x64\WinUpdateChecker.exe
+  dist\publish-x64\PatchPal.exe
 ```
 
 The RFC3161 timestamp (`/tr`) keeps the signature valid after the cert expires.
@@ -60,7 +60,7 @@ For local testing of the signing pipeline:
 ```powershell
 $cert = New-SelfSignedCertificate `
     -Type CodeSigningCert `
-    -Subject "CN=WinUpdateChecker-Dev" `
+    -Subject "CN=PatchPal-Dev" `
     -CertStoreLocation Cert:\CurrentUser\My
 
 # Trust it on this machine only:
@@ -69,7 +69,7 @@ $store.Open('ReadWrite')
 $store.Add($cert)
 $store.Close()
 
-signtool sign /n "WinUpdateChecker-Dev" /fd SHA256 dist\publish-x64\WinUpdateChecker.exe
+signtool sign /n "PatchPal-Dev" /fd SHA256 dist\publish-x64\PatchPal.exe
 ```
 
 A self-signed cert is **not** trusted by anyone else's machine. Useful only for verifying the signing flow before you have a real cert.
@@ -79,8 +79,8 @@ A self-signed cert is **not** trusted by anyone else's machine. Useful only for 
 ## Verifying a signature
 
 ```powershell
-Get-AuthenticodeSignature .\WinUpdateChecker.exe | Format-List *
-Get-AuthenticodeSignature .\WinUpdateChecker-Setup-2.0.0-x64.exe | Format-List *
+Get-AuthenticodeSignature .\PatchPal.exe | Format-List *
+Get-AuthenticodeSignature .\PatchPal-Setup-2.0.0-x64.exe | Format-List *
 ```
 
 A trusted signature shows `Status: Valid` and a non-empty `TimeStamperCertificate`.

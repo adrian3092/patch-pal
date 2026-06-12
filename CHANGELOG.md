@@ -6,22 +6,25 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [2.0.0] - 2026-06-12
 
-Complete rewrite: WinUpdateChecker is now a native C#/.NET 8 application.
+Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/.NET 8 application.
 
 ### Added
 - Fluent (Windows 11-style) GUI with sidebar navigation: Updates, All apps, History, Settings.
 - Per-row and bulk updates with live in-place progress and result toasts.
-- Persisted update history (%APPDATA%\WinUpdateChecker) with captured failure logs.
+- Persisted update history (%APPDATA%\PatchPal) with captured failure logs.
 - Settings page: theme (System/Light/Dark), scan on launch, per-source toggles,
   system-components toggle.
 - Self-contained single-exe builds for x64 and ARM64 — no PowerShell or .NET install needed.
 - Parallel source queries — scans are faster than v1.
 
 ### Changed
+- **Breaking:** the application is renamed from WinUpdateChecker to Patch Pal
+  (`PatchPal.exe`). Existing settings and update history in
+  %APPDATA%\WinUpdateChecker are migrated automatically on first launch.
 - **Breaking:** CLI flags renamed (`-NoGui` → `--no-gui`, `-ExportCsv` → `--export-csv`,
   `-ExportHtml` → `--export-html`, `-Source` → `--source`,
   `-IncludeSystemComponents` → `--include-system-components`). Update scheduled tasks
-  to invoke `WinUpdateChecker.exe` — see the README migration table.
+  to invoke `PatchPal.exe` — see the README migration table.
 - Failed package-manager queries now surface as visible warnings instead of being
   silently treated as "no updates".
 

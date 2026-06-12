@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory)][int]$X,       # click offset from window left
     [Parameter(Mandatory)][int]$Y,       # click offset from window top
     [Parameter(Mandatory)][string]$OutFile,
-    [string]$ProcessName = 'WinUpdateChecker',
+    [string]$ProcessName = 'PatchPal',
     [int]$SettleMs = 1200
 )
 Add-Type -AssemblyName System.Drawing
