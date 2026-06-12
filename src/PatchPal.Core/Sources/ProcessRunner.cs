@@ -76,14 +76,27 @@ public sealed class ProcessRunner : IProcessRunner
 
     public async Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default)
     {
+        // Already elevated (the app manifest requests admin at launch): run directly,
+        // which redirects output for the history log and opens no console window.
+        if (IsElevated())
+            return await RunAsync(fileName, arguments, ct);
+
         var psi = new ProcessStartInfo(fileName, arguments)
         {
             UseShellExecute = true, // required for the UAC verb
             Verb = "runas",
+            WindowStyle = ProcessWindowStyle.Hidden, // ShellExecute cannot redirect; at least keep the console hidden
         };
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException($"Failed to start {fileName}");
         await proc.WaitForExitAsync(ct);
         return new ProcessResult(proc.ExitCode, "", "");
+    }
+
+    private static bool IsElevated()
+    {
+        using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+        return new System.Security.Principal.WindowsPrincipal(identity)
+            .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
     }
 }

@@ -123,13 +123,13 @@ v2 removes `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat` — the install
 
 ## Schedule a daily check
 
-Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the paths to your install location):
+Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the paths to your install location). `-RunLevel Highest` is required — Patch Pal requests administrator rights, and a task without it cannot show the UAC prompt:
 
 ```powershell
 $action  = New-ScheduledTaskAction -Execute "$env:LOCALAPPDATA\Programs\PatchPal\PatchPal.exe" `
     -Argument '--export-html "C:\Tools\PatchPal\latest.html"'
 $trigger = New-ScheduledTaskTrigger -Daily -At 9am
-Register-ScheduledTask -TaskName 'Patch Pal Daily' -Action $action -Trigger $trigger
+Register-ScheduledTask -TaskName 'Patch Pal Daily' -Action $action -Trigger $trigger -RunLevel Highest
 ```
 
 ## How it works
@@ -160,7 +160,7 @@ Register-ScheduledTask -TaskName 'Patch Pal Daily' -Action $action -Trigger $tri
               +-------------------------+
 ```
 
-The **Source** column tells you which manager owns each update; updating dispatches to the correct CLI (`winget upgrade`, `scoop update`, `choco upgrade`). winget and Chocolatey upgrades trigger a UAC prompt; Scoop runs as the current user.
+The **Source** column tells you which manager owns each update; updating dispatches to the correct CLI (`winget upgrade`, `scoop update`, `choco upgrade`). Patch Pal asks for administrator rights once at launch, so individual upgrades run silently in the background with their output captured in History.
 
 ## FAQ
 
@@ -179,8 +179,8 @@ That program isn't in any of the package-manager catalogs. Patch Pal can only re
 **Does it support PortableApps / Microsoft Store / Steam / etc.?**
 Microsoft Store apps appear if winget can see them (it usually can). Steam and other store-managed apps are reported as installed but updates are managed by their own clients.
 
-**Can I run it without admin?**
-Yes — for scanning. Some upgrades (winget, choco) request elevation when invoked.
+**Why does it ask for administrator rights at launch?**
+winget and Chocolatey need admin rights to update machine-wide installs. Asking once at startup means no per-update UAC prompts and no flashing console windows — and lets Patch Pal capture each upgrade's output for the History page. Standard-user accounts will need an administrator to approve the prompt.
 
 ## Verify a release
 
