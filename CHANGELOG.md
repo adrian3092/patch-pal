@@ -21,6 +21,10 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
 - **Breaking:** the application is renamed from WinUpdateChecker to Patch Pal
   (`PatchPal.exe`). Existing settings and update history in
   %APPDATA%\WinUpdateChecker are migrated automatically on first launch.
+- **Breaking:** Patch Pal now requests administrator rights at launch (one UAC
+  prompt) instead of prompting for every winget/Chocolatey upgrade. Upgrades run
+  silently with output captured in History; no more flashing console windows.
+  Scheduled tasks must be registered with "Run with highest privileges".
 - **Breaking:** CLI flags renamed (`-NoGui` → `--no-gui`, `-ExportCsv` → `--export-csv`,
   `-ExportHtml` → `--export-html`, `-Source` → `--source`,
   `-IncludeSystemComponents` → `--include-system-components`). Update scheduled tasks
