@@ -36,7 +36,6 @@ public class SettingsViewModelTests : IDisposable
     {
         var vm = Vm();
         vm.Sources.First(s => s.Name == "scoop").IsEnabled = false;
-        vm.PersistSourceStates();
         var reloaded = new SettingsStore(_dir.FullName).Load();
         Assert.Contains("scoop", reloaded.DisabledSources);
     }

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Complete C#/WPF rewrite: Fluent sidebar GUI (Updates / All apps / History / Settings),
+  in-place upgrade progress, persisted update history, theme support. CLI parity retained.
+
 ## [1.0.3] - 2026-06-04
 
 ### Security
