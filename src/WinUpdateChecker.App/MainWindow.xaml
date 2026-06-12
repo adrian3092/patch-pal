@@ -9,6 +9,7 @@
     Height="680"
     MinWidth="900"
     MinHeight="480"
+    FontFamily="Segoe UI Variable Text, Segoe UI"
     WindowBackdropType="Mica"
     ExtendsContentIntoTitleBar="True"
     WindowStartupLocation="CenterScreen">
