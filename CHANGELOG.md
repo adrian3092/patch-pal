@@ -4,11 +4,30 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-06-12
+
+Complete rewrite: WinUpdateChecker is now a native C#/.NET 8 application.
 
 ### Added
-- Complete C#/WPF rewrite: Fluent sidebar GUI (Updates / All apps / History / Settings),
-  in-place upgrade progress, persisted update history, theme support. CLI parity retained.
+- Fluent (Windows 11-style) GUI with sidebar navigation: Updates, All apps, History, Settings.
+- Per-row and bulk updates with live in-place progress and result toasts.
+- Persisted update history (%APPDATA%\WinUpdateChecker) with captured failure logs.
+- Settings page: theme (System/Light/Dark), scan on launch, per-source toggles,
+  system-components toggle.
+- Self-contained single-exe builds for x64 and ARM64 — no PowerShell or .NET install needed.
+- Parallel source queries — scans are faster than v1.
+
+### Changed
+- **Breaking:** CLI flags renamed (`-NoGui` → `--no-gui`, `-ExportCsv` → `--export-csv`,
+  `-ExportHtml` → `--export-html`, `-Source` → `--source`,
+  `-IncludeSystemComponents` → `--include-system-components`). Update scheduled tasks
+  to invoke `WinUpdateChecker.exe` — see the README migration table.
+- Failed package-manager queries now surface as visible warnings instead of being
+  silently treated as "no updates".
+
+### Removed
+- **Breaking:** `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat`. The installer
+  removes them from existing installs on upgrade.
 
 ## [1.0.3] - 2026-06-04
 
