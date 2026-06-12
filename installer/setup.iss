@@ -1,4 +1,4 @@
-; WinUpdateChecker installer script (Inno Setup 6).
+; Patch Pal installer script (Inno Setup 6).
 ; CI builds one installer per architecture:
 ;   ISCC.exe /DMyAppVersion=2.0.0 /DMyAppArch=x64   /DMySourceDir=..\dist\publish-x64   installer\setup.iss
 ;   ISCC.exe /DMyAppVersion=2.0.0 /DMyAppArch=arm64 /DMySourceDir=..\dist\publish-arm64 installer\setup.iss
@@ -13,13 +13,15 @@
   #define MySourceDir "..\dist\publish-x64"
 #endif
 
-#define MyAppName        "WinUpdateChecker"
-#define MyAppPublisher   "WinUpdateChecker contributors"
+#define MyAppName        "Patch Pal"
+#define MyAppDirName     "PatchPal"
+#define MyAppPublisher   "Patch Pal contributors"
 #define MyAppURL         "https://github.com/adrian3092/win-update-checker"
-#define MyAppExeName     "WinUpdateChecker.exe"
+#define MyAppExeName     "PatchPal.exe"
 
 [Setup]
-; Same AppId as v1 so installing v2 upgrades an existing v1 install in place.
+; Same AppId as v1 (which installed as "WinUpdateChecker") so installing
+; Patch Pal upgrades an existing v1 install in place.
 AppId={{60cbe8cd-e316-4bc8-9a92-96305ec2c7d2}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -27,12 +29,12 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}/issues
 AppUpdatesURL={#MyAppURL}/releases
-DefaultDirName={autopf}\{#MyAppName}
+DefaultDirName={autopf}\{#MyAppDirName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
 OutputDir=..\dist
-OutputBaseFilename=WinUpdateChecker-Setup-{#MyAppVersion}-{#MyAppArch}
+OutputBaseFilename=PatchPal-Setup-{#MyAppVersion}-{#MyAppArch}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

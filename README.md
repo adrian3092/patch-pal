@@ -1,4 +1,4 @@
-# WinUpdateChecker
+# Patch Pal
 
 A native Windows 11-style app that scans your installed programs and tells you which ones have updates available.
 
@@ -6,7 +6,7 @@ It reads the same uninstall registry keys that **Programs and Features** uses, t
 
 Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero telemetry. Ships as a single self-contained exe — no .NET install needed.
 
-> **v2.0 is a complete rewrite.** v1 was a PowerShell + WinForms script; v2 is a native application. See the [CHANGELOG](CHANGELOG.md) and the [Migrating from v1.x](#migrating-from-v1x) section below.
+> **v2.0 is a complete rewrite — and a rename.** v1 shipped as **WinUpdateChecker**, a PowerShell + WinForms script; v2 is a native application called **Patch Pal**. Installing v2 upgrades an existing v1 install in place, and your settings and update history carry over. See the [CHANGELOG](CHANGELOG.md) and the [Migrating from v1.x](#migrating-from-v1x) section below.
 
 ---
 
@@ -46,17 +46,17 @@ Pick whichever you prefer — both ship from the same GitHub release page, per a
 
 Download the installer for your architecture from the [latest release](https://github.com/adrian3092/win-update-checker/releases/latest):
 
-- `WinUpdateChecker-Setup-x.y.z-x64.exe` — Intel/AMD PCs
-- `WinUpdateChecker-Setup-x.y.z-arm64.exe` — ARM PCs (Snapdragon, etc.)
+- `PatchPal-Setup-x.y.z-x64.exe` — Intel/AMD PCs
+- `PatchPal-Setup-x.y.z-arm64.exe` — ARM PCs (Snapdragon, etc.)
 
 Run it, click through the wizard, launch from the Start menu. Standard Add-or-Remove-Programs uninstall. Installing v2 over an existing v1 install upgrades it in place.
 
 ### Portable zip
 
-1. Download `WinUpdateChecker-portable-x.y.z-x64.zip` (or `-arm64.zip`).
+1. Download `PatchPal-portable-x.y.z-x64.zip` (or `-arm64.zip`).
 2. Right-click the downloaded zip → **Properties** → tick **Unblock** → OK.
 3. Extract anywhere.
-4. Run **`WinUpdateChecker.exe`**.
+4. Run **`PatchPal.exe`**.
 
 That's it. The first scan takes 5–15 seconds.
 
@@ -65,7 +65,7 @@ That's it. The first scan takes 5–15 seconds.
 ```powershell
 git clone https://github.com/adrian3092/win-update-checker.git
 cd win-update-checker
-dotnet run --project src/WinUpdateChecker.App
+dotnet run --project src/PatchPal.App
 ```
 
 Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
@@ -74,7 +74,7 @@ Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 ### GUI
 
-Just run `WinUpdateChecker.exe`. Scan, review, and update from the **Updates** page; browse everything installed on **All apps**; review past updates (including failure logs) on **History**.
+Just run `PatchPal.exe`. Scan, review, and update from the **Updates** page; browse everything installed on **All apps**; review past updates (including failure logs) on **History**.
 
 ### CLI
 
@@ -90,20 +90,20 @@ Run the same exe with flags for headless use:
 
 ```powershell
 # Print updates to the console
-WinUpdateChecker.exe --no-gui
+PatchPal.exe --no-gui
 
 # Generate a stand-alone HTML report
-WinUpdateChecker.exe --export-html report.html
+PatchPal.exe --export-html report.html
 
 # Generate a CSV (handy for scheduled tasks)
-WinUpdateChecker.exe --export-csv "$env:USERPROFILE\Desktop\updates.csv"
+PatchPal.exe --export-csv "$env:USERPROFILE\Desktop\updates.csv"
 
 # Restrict to specific package managers
-WinUpdateChecker.exe --no-gui --source winget
-WinUpdateChecker.exe --no-gui --source scoop,chocolatey
+PatchPal.exe --no-gui --source winget
+PatchPal.exe --no-gui --source scoop,chocolatey
 
 # Include Windows components and hotfixes
-WinUpdateChecker.exe --no-gui --include-system-components
+PatchPal.exe --no-gui --include-system-components
 ```
 
 Exit code `0` on success, `1` on error. The CLI is scan/export only — running upgrades is done from the GUI.
@@ -114,7 +114,7 @@ v2 removes `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat` — the install
 
 | v1 (PowerShell) | v2 |
 |---|---|
-| `.\Run.bat` | `WinUpdateChecker.exe` |
+| `.\Run.bat` | `PatchPal.exe` |
 | `-NoGui` | `--no-gui` |
 | `-ExportCsv <path>` | `--export-csv <path>` |
 | `-ExportHtml <path>` | `--export-html <path>` |
@@ -126,10 +126,10 @@ v2 removes `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat` — the install
 Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the paths to your install location):
 
 ```powershell
-$action  = New-ScheduledTaskAction -Execute "$env:LOCALAPPDATA\Programs\WinUpdateChecker\WinUpdateChecker.exe" `
-    -Argument '--export-html "C:\Tools\WinUpdateChecker\latest.html"'
+$action  = New-ScheduledTaskAction -Execute "$env:LOCALAPPDATA\Programs\PatchPal\PatchPal.exe" `
+    -Argument '--export-html "C:\Tools\PatchPal\latest.html"'
 $trigger = New-ScheduledTaskTrigger -Daily -At 9am
-Register-ScheduledTask -TaskName 'WinUpdateChecker Daily' -Action $action -Trigger $trigger
+Register-ScheduledTask -TaskName 'Patch Pal Daily' -Action $action -Trigger $trigger
 ```
 
 ## How it works
@@ -174,7 +174,7 @@ SmartScreen warns on unsigned downloads it hasn't seen before. Right-click the z
 The exe bundles the entire .NET runtime so it runs on any machine with zero prerequisites — no .NET install, no PowerShell version requirements.
 
 **It says my program is "Up to date / unknown" but I know there's an update.**
-That program isn't in any of the package-manager catalogs. WinUpdateChecker can only report on what winget/Scoop/Chocolatey know about. For full coverage, install winget at minimum.
+That program isn't in any of the package-manager catalogs. Patch Pal can only report on what winget/Scoop/Chocolatey know about. For full coverage, install winget at minimum.
 
 **Does it support PortableApps / Microsoft Store / Steam / etc.?**
 Microsoft Store apps appear if winget can see them (it usually can). Steam and other store-managed apps are reported as installed but updates are managed by their own clients.
@@ -187,7 +187,7 @@ Yes — for scanning. Some upgrades (winget, choco) request elevation when invok
 Each GitHub release includes a `SHA256SUMS.txt`. Verify a downloaded artifact:
 
 ```powershell
-Get-FileHash .\WinUpdateChecker-Setup-2.0.0-x64.exe -Algorithm SHA256
+Get-FileHash .\PatchPal-Setup-2.0.0-x64.exe -Algorithm SHA256
 ```
 
 Compare against the published hash before running. Once the project is enrolled in [SignPath OSS signing](docs/SIGNING.md), installer downloads will also carry a verifiable Authenticode signature — check the file's **Properties → Digital Signatures** tab.
@@ -196,7 +196,7 @@ Compare against the published hash before running. Once the project is enrolled 
 
 ```powershell
 # Publish the self-contained exe (per architecture)
-dotnet publish src/WinUpdateChecker.App -c Release -r win-x64 --self-contained `
+dotnet publish src/PatchPal.App -c Release -r win-x64 --self-contained `
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
   -o dist/publish-x64
 
@@ -216,7 +216,7 @@ PRs welcome. Please:
 
 1. Open an issue first for non-trivial changes.
 2. Use the .NET 8 SDK; `dotnet test` must pass.
-3. Keep `WinUpdateChecker.Core` UI-free — all WPF code lives in `WinUpdateChecker.App`.
+3. Keep `PatchPal.Core` UI-free — all WPF code lives in `PatchPal.App`.
 
 ## License
 

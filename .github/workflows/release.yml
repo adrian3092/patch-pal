@@ -53,7 +53,7 @@ jobs:
         run: |
           $v = '${{ steps.ver.outputs.version }}'
           foreach ($arch in 'x64','arm64') {
-            dotnet publish src/WinUpdateChecker.App -c Release -r "win-$arch" --self-contained `
+            dotnet publish src/PatchPal.App -c Release -r "win-$arch" --self-contained `
               -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
               -p:Version=$v -o "dist/publish-$arch"
             if ($LASTEXITCODE -ne 0) { exit 1 }
@@ -81,8 +81,8 @@ jobs:
           foreach ($arch in 'x64','arm64') {
             $stage = "dist/portable-$arch"
             New-Item -ItemType Directory -Force -Path $stage | Out-Null
-            Copy-Item "dist/publish-$arch/WinUpdateChecker.exe", 'README.md', 'LICENSE', 'CHANGELOG.md' $stage
-            Compress-Archive -Path "$stage/*" -DestinationPath "dist/WinUpdateChecker-portable-$v-$arch.zip" -Force
+            Copy-Item "dist/publish-$arch/PatchPal.exe", 'README.md', 'LICENSE', 'CHANGELOG.md' $stage
+            Compress-Archive -Path "$stage/*" -DestinationPath "dist/PatchPal-portable-$v-$arch.zip" -Force
           }
 
       - name: Generate SHA256SUMS
@@ -116,7 +116,7 @@ jobs:
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: WinUpdateChecker-${{ steps.ver.outputs.version }}
+          name: PatchPal-${{ steps.ver.outputs.version }}
           path: |
             dist/*.exe
             dist/*.zip
@@ -127,10 +127,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/WinUpdateChecker-Setup-${{ steps.ver.outputs.version }}-x64.exe
-            dist/WinUpdateChecker-Setup-${{ steps.ver.outputs.version }}-arm64.exe
-            dist/WinUpdateChecker-portable-${{ steps.ver.outputs.version }}-x64.zip
-            dist/WinUpdateChecker-portable-${{ steps.ver.outputs.version }}-arm64.zip
+            dist/PatchPal-Setup-${{ steps.ver.outputs.version }}-x64.exe
+            dist/PatchPal-Setup-${{ steps.ver.outputs.version }}-arm64.exe
+            dist/PatchPal-portable-${{ steps.ver.outputs.version }}-x64.zip
+            dist/PatchPal-portable-${{ steps.ver.outputs.version }}-arm64.zip
             dist/SHA256SUMS.txt
           draft: true
           generate_release_notes: true

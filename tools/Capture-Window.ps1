@@ -1,5 +1,5 @@
 param(
-    [string]$ProcessName = 'WinUpdateChecker',
+    [string]$ProcessName = 'PatchPal',
     [Parameter(Mandatory)][string]$OutFile
 )
 # Captures the window's own surface via PrintWindow (PW_RENDERFULLCONTENT), so the
