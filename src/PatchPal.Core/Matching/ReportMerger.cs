@@ -33,13 +33,13 @@ public static class ReportMerger
                     Publisher: prog.Publisher,
                     Current: prog.Version,
                     Available: isNewer ? match.Available : "",
-                    Status: isNewer ? "Update available" : "Up to date / unknown",
+                    Status: isNewer ? "Update available" : "Up to date",
                     PackageId: isNewer ? match.Id : "",
                     PackageSource: isNewer ? match.PackageSource : ""));
             }
             else
             {
-                var status = enabledSources.Count > 0 ? "Up to date / unknown" : "No package manager detected";
+                var status = enabledSources.Count > 0 ? "Not tracked" : "No package manager detected";
                 rows.Add(new ReportRow(prog.Name, prog.Publisher, prog.Version, "", status, "", ""));
             }
         }

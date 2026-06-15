@@ -10,7 +10,7 @@ public class AllAppsViewModelTests
     private static ScanResult Result() => new(
         [
             new ReportRow("7zip", "Igor Pavlov", "23.01", "24.08", "Update available", "7zip.7zip", "winget"),
-            new ReportRow("Notepad++", "Don Ho", "8.6", "", "Up to date / unknown", "", ""),
+            new ReportRow("Notepad++", "Don Ho", "8.6", "", "Not tracked", "", ""),
         ],
         ["winget"], 2, []);
 
@@ -40,7 +40,7 @@ public class AllAppsViewModelTests
         vm.Refresh();
         var notepad = vm.Rows.First(r => r.Name == "Notepad++");
         Assert.True(vm.MatchesFilter(notepad, "don ho"));        // publisher, case-insensitive
-        Assert.True(vm.MatchesFilter(notepad, "unknown"));       // status text
+        Assert.True(vm.MatchesFilter(notepad, "tracked"));       // status text
         Assert.False(vm.MatchesFilter(notepad, "winget"));
     }
 }

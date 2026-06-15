@@ -173,8 +173,8 @@ SmartScreen warns on unsigned downloads it hasn't seen before. Right-click the z
 **Why is the download ~80 MB?**
 The exe bundles the entire .NET runtime so it runs on any machine with zero prerequisites — no .NET install, no PowerShell version requirements.
 
-**It says my program is "Up to date / unknown" but I know there's an update.**
-That program isn't in any of the package-manager catalogs. Patch Pal can only report on what winget/Scoop/Chocolatey know about. For full coverage, install winget at minimum.
+**A program shows "Not tracked" but I know there's an update.**
+"Not tracked" means the program isn't in any of the package-manager catalogs, so Patch Pal can't see or apply updates for it — it can only report on what winget/Scoop/Chocolatey know about. For full coverage, install winget at minimum.
 
 **Does it support PortableApps / Microsoft Store / Steam / etc.?**
 Microsoft Store apps appear if winget can see them (it usually can). Steam and other store-managed apps are reported as installed but updates are managed by their own clients.

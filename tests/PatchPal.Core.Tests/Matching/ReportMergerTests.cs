@@ -62,7 +62,7 @@ public class ReportMergerTests
     {
         var chrome = MergedRows().First(r => r.Name == "Google Chrome");
         Assert.False(chrome.IsUpdate);
-        Assert.Equal("Up to date / unknown", chrome.Status);
+        Assert.Equal("Not tracked", chrome.Status);
     }
 
     [Fact]

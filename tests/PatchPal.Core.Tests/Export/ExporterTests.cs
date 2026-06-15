@@ -8,7 +8,7 @@ public class ExporterTests
     private static readonly IReadOnlyList<ReportRow> Rows =
     [
         new("Git", "The Git \"Team\", Inc.", "2.44.0", "2.45.2", "Update available", "Git.Git", "winget"),
-        new("<script>alert(1)</script>", "Evil, Corp", "1.0", "", "Up to date / unknown", "", ""),
+        new("<script>alert(1)</script>", "Evil, Corp", "1.0", "", "Not tracked", "", ""),
     ];
 
     [Fact]
