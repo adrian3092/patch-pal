@@ -1,78 +1,50 @@
 # Code signing
 
-This project ships unsigned by default. Signing is optional but it removes the **"Windows protected your PC"** SmartScreen prompt, which significantly improves first-run trust on a public download.
+Patch Pal is signed through the [SignPath Foundation](https://signpath.org) program, which gives open-source projects free code signing. The certificate is issued to SignPath Foundation, so Windows shows **SignPath Foundation** as the publisher. The project's commitments are in the README's [Code signing policy](../README.md#code-signing-policy).
 
-There are three realistic paths.
+Releases up to v2.0.0 are unsigned.
 
----
-
-## Option 1 — SignPath.io free OSS signing (recommended)
-
-[SignPath.io](https://signpath.io/) issues free code-signing certificates to qualifying open-source projects. They sign artifacts your CI produces, so your private key never leaves their infrastructure.
-
-### Eligibility checklist
-
-- [ ] Public GitHub repository
-- [ ] OSI-approved license (MIT — already in this repo)
-- [ ] Active development (recent commits, responding issues)
-- [ ] CI pipeline that produces release artifacts (GitHub Actions workflow already in this repo)
-- [ ] Reproducible builds (the included workflow qualifies)
-
-### Application steps
-
-1. Sign up at <https://signpath.io/> and choose the **Open Source** plan.
-2. Submit your GitHub repo URL. Approval typically takes a few business days.
-3. Once approved, in the SignPath UI:
-   - Create a **Project** with slug `win-update-checker`.
-   - Create an **Artifact configuration** for the installer (`PatchPal-Setup-*.exe`).
-   - Create a **Signing policy** named `release-signing` that uses your certificate.
-   - Generate a **CI API token** and add it to your GitHub repo secrets as `SIGNPATH_API_TOKEN`.
-4. In `.github/workflows/release.yml`, uncomment the **"Submit signing request"** block and fill in your `organization-id`. Push a new tag — CI will upload the unsigned installer, SignPath signs it, the workflow downloads the signed result, and the release is published with a signed setup.exe.
-
-### What gets signed
-
-- The Inno Setup installers (`PatchPal-Setup-*-x64.exe` / `-arm64.exe`).
-- Optionally the portable `PatchPal.exe` itself (configure a second artifact configuration).
+Signing removes the "Unknown publisher" warning from UAC prompts. SmartScreen's "Windows protected your PC" warning fades as signed downloads build reputation; no certificate skips that step any more (EV certificates stopped doing so in August 2024).
 
 ---
 
-## Option 2 — Buy a commercial certificate
+## Conditions to keep meeting
 
-If you want to sign locally without depending on SignPath, buy an OV ($200–400/yr) or EV ($300–600/yr) code-signing certificate from DigiCert, SSL.com, Sectigo, or similar. EV certificates skip the SmartScreen "reputation building" period entirely.
+From the [SignPath Foundation terms](https://signpath.org/terms.html):
 
-After installing the cert in `Cert:\CurrentUser\My`, sign the published exe with `signtool` (from the Windows SDK):
-
-```powershell
-signtool sign /n "Your Name" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
-  dist\publish-x64\PatchPal.exe
-```
-
-The RFC3161 timestamp (`/tr`) keeps the signature valid after the cert expires.
-
-To sign the Inno Setup installer locally, configure Inno Setup's **Tools → Configure Sign Tools** and add a `SignTool` directive to `installer/setup.iss`.
+- An OSI-approved license (MIT) with no commercial dual-licensing and no proprietary components. A paid or closed edition of Patch Pal would end eligibility.
+- Multi-factor authentication for every team member, on both GitHub and SignPath.
+- The code signing policy stays on the README and is linked from each release's notes.
+- Every release is approved by hand in SignPath before it is signed.
+- Signed files carry the project name and release version: product name `Patch Pal` (set in `src/PatchPal.App/PatchPal.App.csproj` and `installer/setup.iss`) and the version CI passes from the tag.
 
 ---
 
-## Option 3 — Self-signed certificate (development only)
+## One-time setup
 
-For local testing of the signing pipeline:
+1. **Apply** at <https://signpath.org/apply>. Give the repository URL and the code signing policy URL (`https://github.com/adrian3092/win-update-checker#code-signing-policy`). Approval takes some days.
+2. **After approval, in SignPath:**
+   - Create the project `win-update-checker` and link the GitHub repository as its trusted build system.
+   - Create two artifact configurations, each restricted to product name `Patch Pal` and the release version:
+     - `exe` — signs the two `PatchPal.exe` builds (x64 and arm64) before they are packaged.
+     - `installer` — signs the two `PatchPal-Setup-*.exe` installers.
+   - Create the signing policy `release-signing` with manual approval.
+   - Add a CI API token to the GitHub repo as the secret `SIGNPATH_API_TOKEN`, and the SignPath organization ID as the repository variable `SIGNPATH_ORGANIZATION_ID`.
+3. **Wire up `.github/workflows/release.yml`** with two signing requests, using `signpath/github-action-submit-signing-request`:
+   - After `dotnet publish`: sign `PatchPal.exe`, so the installers and portable zips both contain the signed exe.
+   - After Inno Setup: sign the installers, then generate `SHA256SUMS.txt` from the signed files.
 
-```powershell
-$cert = New-SelfSignedCertificate `
-    -Type CodeSigningCert `
-    -Subject "CN=PatchPal-Dev" `
-    -CertStoreLocation Cert:\CurrentUser\My
+   Gate both steps on `SIGNPATH_ORGANIZATION_ID` so releases still build unsigned when it isn't set. Add a **Code signing policy** link to the release notes. Test with a manual `workflow_dispatch` run before tagging.
 
-# Trust it on this machine only:
-$store = Get-Item Cert:\CurrentUser\Root
-$store.Open('ReadWrite')
-$store.Add($cert)
-$store.Close()
+### Known limitation
 
-signtool sign /n "PatchPal-Dev" /fd SHA256 dist\publish-x64\PatchPal.exe
-```
+Inno Setup's uninstaller (`unins000.exe`) is generated and compressed inside the installer, so it stays unsigned. Uninstalling an all-users install therefore shows an "Unknown publisher" UAC prompt.
 
-A self-signed cert is **not** trusted by anyone else's machine. Useful only for verifying the signing flow before you have a real cert.
+---
+
+## Alternative: Azure Artifact Signing
+
+If Patch Pal ever needs a certificate in its own name (for example, for a paid edition), [Azure Artifact Signing](https://learn.microsoft.com/azure/artifact-signing/quickstart) costs $9.99/month. Individual developers must be in the US or Canada and verify their identity with a government ID; the certificate shows the developer's name and city, state, and country.
 
 ---
 
