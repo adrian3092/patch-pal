@@ -13,6 +13,14 @@ public class UpgradeExitMessagesTests
         => Assert.StartsWith("No applicable upgrade", UpgradeExitMessages.Translate("winget", -1978335189));
 
     [Fact]
+    public void WingetNoApplicableInstaller_IsExplained() // 0x8A150010
+        => Assert.StartsWith("No installer applicable", UpgradeExitMessages.Translate("winget", -1978335216));
+
+    [Fact]
+    public void WingetNoNetwork_IsExplained() // 0x8A150107
+        => Assert.Contains("network", UpgradeExitMessages.Translate("winget", -1978334969));
+
+    [Fact]
     public void WingetInstallTechnologyMismatch_IsExplained() // 0x8A15008E
         => Assert.Contains("different installer", UpgradeExitMessages.Translate("winget", -1978335090));
 

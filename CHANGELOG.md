@@ -44,6 +44,9 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
   skips it — Edge Update keeps Edge current.
 - An upgrade that winget refuses because of an install technology mismatch now
   explains why instead of showing a raw exit code.
+- An upgrade that fails for lack of an internet connection (winget `0x8A150107`) no
+  longer reports "No installer applicable"; that message now goes to the code that
+  means it (`0x8A150010`).
 
 ## [1.0.3] - 2026-06-04
 
