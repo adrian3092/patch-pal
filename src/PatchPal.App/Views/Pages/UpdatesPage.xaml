@@ -168,7 +168,7 @@
                     </Style>
                 </StackPanel.Style>
                 <ui:SymbolIcon Symbol="CheckmarkCircle48" FontSize="48" Opacity="0.5" HorizontalAlignment="Center" />
-                <TextBlock Text="Everything is up to date" FontSize="16" Margin="0,10,0,0" Opacity="0.7" />
+                <TextBlock Text="{Binding EmptyStateText}" FontSize="16" Margin="0,10,0,0" Opacity="0.7" />
             </StackPanel>
         </Grid>
     </Grid>

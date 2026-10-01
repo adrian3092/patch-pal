@@ -50,6 +50,9 @@ public sealed partial class UpdatesViewModel : ObservableObject
 
     public string UpdateAllLabel => $"Update all ({UpdatableCount})";
 
+    /// <summary>Text for an empty list; never claims "up to date" while a source failed to answer.</summary>
+    public string EmptyStateText => Warnings.Count > 0 ? "No updates found" : "Everything is up to date";
+
     public UpdatesViewModel() : this(
         AppServices.ScanService, AppServices.BatchUpgradeRunner, AppServices.ScanState, AppServices.Settings)
     {
@@ -90,6 +93,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
             foreach (var w in result.Warnings) Warnings.Add(w);
             if (result.EnabledSources.Count == 0)
                 Warnings.Add("No package manager detected (winget, Scoop, Chocolatey) — updates cannot be checked.");
+            OnPropertyChanged(nameof(EmptyStateText));
 
             LastScanText = $"Last scanned {DateTimeOffset.Now:HH:mm}";
         }
