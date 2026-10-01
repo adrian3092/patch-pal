@@ -124,6 +124,91 @@ public class UpdatesViewModelTests : IDisposable
         Assert.Contains("results may be incomplete", vm.Warnings[0]);
     }
 
+    // winget lists Edge as upgradable, but its MSI-only package can't upgrade the copy Windows
+    // ships (0x8A15008E), so Edge must be shown as self-updating and never sent to winget.
+    private (UpdatesViewModel Vm, FakeRunner Runner) SetupWithEdge()
+    {
+        var runner = new FakeRunner { ListOutput = EdgeAndGitUpgrades };
+        var sources = new IPackageSource[] { new WingetSource(runner) };
+        var scan = new ScanService(
+            new FakePrograms(new InstalledProgram("Microsoft Edge", "154.0.4258.37", "Microsoft Corporation"),
+                             new InstalledProgram("Git", "2.44.0", "The Git Development Community")),
+            sources);
+        var batch = new BatchUpgradeRunner(new UpgradeRunner(sources), new HistoryStore(_dir.FullName));
+        var vm = new UpdatesViewModel(scan, batch, new ScanState(), new AppSettings());
+        vm.ConfirmInteraction = _ => Task.FromResult(true);      // auto-confirm in tests
+        return (vm, runner);
+    }
+
+    // The winget parser slices by header column positions, so cells are padded to align.
+    private static string WingetRow(string name, string id, string version, string available, string source)
+        => name.PadRight(16) + id.PadRight(16) + version.PadRight(15) + available.PadRight(15) + source;
+
+    private static readonly string EdgeAndGitUpgrades = string.Join('\n',
+        WingetRow("Name", "Id", "Version", "Available", "Source"),
+        new string('-', 70),
+        WingetRow("Microsoft Edge", "Microsoft.Edge", "154.0.4258.37", "154.0.4258.48", "winget"),
+        WingetRow("Git", "Git.Git", "2.44.0", "2.45.2", "winget"),
+        "2 upgrades available.",
+        "");
+
+    [Fact]
+    public async Task Scan_SelfUpdatingApp_IsListedWithoutUpdateButton()
+    {
+        var (vm, _) = SetupWithEdge();
+        await vm.ScanAsync();
+        var edge = vm.Rows.Single(r => r.Name == "Microsoft Edge");
+        Assert.True(edge.UpdatesItself);                         // row reads "Updates itself"...
+        Assert.False(edge.CanUpdate);                            // ...instead of an Update button
+        Assert.True(vm.Rows.Single(r => r.Name == "Git").CanUpdate);
+        Assert.Equal(2, vm.UpdateCount);                         // still listed, not "Everything is up to date"
+    }
+
+    [Fact]
+    public async Task Scan_RefreshesUpdateAllLabel()
+    {
+        var (vm, _) = SetupWithEdge();
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        await vm.ScanAsync();
+        Assert.Contains(nameof(UpdatesViewModel.UpdateAllLabel), changed); // button text re-binds after a scan
+    }
+
+    [Fact]
+    public async Task UpdateAll_SkipsSelfUpdatingApp()
+    {
+        var (vm, runner) = SetupWithEdge();
+        await vm.ScanAsync();
+        string? prompt = null;
+        vm.ConfirmInteraction = p => { prompt = p; return Task.FromResult(true); };
+        Assert.Equal("Update all (1)", vm.UpdateAllLabel);
+        await vm.UpdateAllAsync();
+        Assert.Equal("Update all 1 packages?", prompt);          // confirm dialog counts only what will run
+        Assert.Contains(runner.Calls, c => c.Elevated && c.Arguments.Contains("Git.Git"));
+        Assert.DoesNotContain(runner.Calls, c => c.Elevated && c.Arguments.Contains("Microsoft.Edge"));
+        Assert.Equal(RowState.Idle, vm.Rows.Single(r => r.Name == "Microsoft Edge").State);
+    }
+
+    [Fact]
+    public async Task UpdateSelected_SkipsSelfUpdatingApp()
+    {
+        var (vm, runner) = SetupWithEdge();
+        await vm.ScanAsync();
+        foreach (var row in vm.Rows) row.IsSelected = true;
+        await vm.UpdateSelectedAsync();
+        Assert.Contains(runner.Calls, c => c.Elevated && c.Arguments.Contains("Git.Git"));
+        Assert.DoesNotContain(runner.Calls, c => c.Elevated && c.Arguments.Contains("Microsoft.Edge"));
+    }
+
+    [Fact]
+    public async Task UpdateOne_SelfUpdatingApp_LaunchesNothing()
+    {
+        var (vm, runner) = SetupWithEdge();
+        await vm.ScanAsync();
+        await vm.UpdateOneAsync(vm.Rows.Single(r => r.Name == "Microsoft Edge"));
+        Assert.DoesNotContain(runner.Calls, c => c.Elevated);
+    }
+
     private sealed class ThrowingSource : IPackageSource
     {
         public string Name => "winget";

@@ -179,6 +179,9 @@ The exe bundles the entire .NET runtime so it runs on any machine with zero prer
 **Does it support PortableApps / Microsoft Store / Steam / etc.?**
 Microsoft Store apps appear if winget can see them (it usually can). Steam and other store-managed apps are reported as installed but updates are managed by their own clients.
 
+**Why does Microsoft Edge say "Updates itself" instead of offering an update?**
+Windows installs Edge with Edge's own installer, but winget only has Edge as an MSI package — and winget refuses to upgrade across installer types. Edge keeps itself current through Edge Update; to update right away, open Edge and go to **Settings → About Microsoft Edge**.
+
 **Why does it ask for administrator rights at launch?**
 winget and Chocolatey need admin rights to update machine-wide installs. Asking once at startup means no per-update UAC prompts and no flashing console windows — and lets Patch Pal capture each upgrade's output for the History page. Standard-user accounts will need an administrator to approve the prompt.
 

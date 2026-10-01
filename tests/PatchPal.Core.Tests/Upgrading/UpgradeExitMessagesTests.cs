@@ -13,6 +13,10 @@ public class UpgradeExitMessagesTests
         => Assert.StartsWith("No applicable upgrade", UpgradeExitMessages.Translate("winget", -1978335189));
 
     [Fact]
+    public void WingetInstallTechnologyMismatch_IsExplained() // 0x8A15008E
+        => Assert.Contains("different installer", UpgradeExitMessages.Translate("winget", -1978335090));
+
+    [Fact]
     public void NullExitCode_IsExplained()
         => Assert.Equal("No exit code was returned by the installer.", UpgradeExitMessages.Translate("winget", null));
 

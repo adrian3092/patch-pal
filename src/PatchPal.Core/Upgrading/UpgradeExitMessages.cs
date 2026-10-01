@@ -18,6 +18,7 @@ public static class UpgradeExitMessages
                 -1978335189 => "No applicable upgrade (already current, pinned, or version mismatch).", // 0x8A15002B
                 -1978335212 => "No installed package matched for upgrade.",                              // 0x8A150014
                 -1978334969 => "No installer applicable to this system.",                                // 0x8A150107
+                -1978335090 => "Installed by a different installer type — update it from within the app.", // 0x8A15008E
                 1602 => "Installer cancelled.",
                 1603 => "Fatal installer error (1603) — a newer version may already be present.",
                 -2147023673 => "Operation cancelled (UAC prompt declined?).",

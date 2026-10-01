@@ -42,10 +42,13 @@ public sealed partial class UpdatesViewModel : ObservableObject
     private string _lastScanText = "Not scanned yet";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(UpdateAllLabel))]
     private int _updateCount;
 
-    public string UpdateAllLabel => $"Update all ({UpdateCount})";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateAllLabel))]
+    private int _updatableCount;                                  // excludes apps that update themselves
+
+    public string UpdateAllLabel => $"Update all ({UpdatableCount})";
 
     public UpdatesViewModel() : this(
         AppServices.ScanService, AppServices.BatchUpgradeRunner, AppServices.ScanState, AppServices.Settings)
@@ -81,6 +84,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
             foreach (var row in result.Rows.Where(r => r.IsUpdate))
                 Rows.Add(new UpdateRowViewModel(row));
             UpdateCount = Rows.Count;
+            UpdatableCount = Rows.Count(r => r.IsUpdatable);
 
             Warnings.Clear();
             foreach (var w in result.Warnings) Warnings.Add(w);
@@ -117,7 +121,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
 
     [RelayCommand]
     public Task UpdateAllAsync()
-        => RunBatchAsync(Rows.Where(r => r.CanUpdate).ToList(), $"Update all {UpdateCount} packages?");
+        => RunBatchAsync(Rows.Where(r => r.CanUpdate).ToList(), $"Update all {UpdatableCount} packages?");
 
     [RelayCommand]
     public Task UpdateSelectedAsync()

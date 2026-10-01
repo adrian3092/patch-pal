@@ -36,6 +36,15 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
 - **Breaking:** `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat`. The installer
   removes them from existing installs on upgrade.
 
+### Fixed
+- **Microsoft Edge no longer offers an update that always fails.** Windows installs
+  Edge with Edge's own installer, but winget only has Edge as an MSI, so
+  `winget upgrade` refuses it (`0x8A15008E`, install technology mismatch). Edge's
+  row now reads "Updates itself" instead of showing an Update button, and Update all
+  skips it — Edge Update keeps Edge current.
+- An upgrade that winget refuses because of an install technology mismatch now
+  explains why instead of showing a raw exit code.
+
 ## [1.0.3] - 2026-06-04
 
 ### Security
