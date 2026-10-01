@@ -22,9 +22,9 @@ From the [SignPath Foundation terms](https://signpath.org/terms.html):
 
 ## One-time setup
 
-1. **Apply** at <https://signpath.org/apply>. Give the repository URL and the code signing policy URL (`https://github.com/adrian3092/win-update-checker#code-signing-policy`). Approval takes some days.
+1. **Apply** at <https://signpath.org/apply>. Give the repository URL and the code signing policy URL (`https://github.com/adrian3092/patch-pal#code-signing-policy`). Approval takes some days.
 2. **After approval, in SignPath:**
-   - Create the project `win-update-checker` and link the GitHub repository as its trusted build system.
+   - Create the project `patch-pal` and link the GitHub repository as its trusted build system.
    - Create two artifact configurations, each restricted to product name `Patch Pal` and the release version:
      - `exe` — signs the two `PatchPal.exe` builds (x64 and arm64) before they are packaged.
      - `installer` — signs the two `PatchPal-Setup-*.exe` installers.
