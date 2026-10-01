@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **winget updates no longer vanish on non-English Windows.** winget prints its update
+  list in the Windows display language, and Patch Pal only recognized the English
+  table, so it reported "Everything is up to date". The list is now read by its layout
+  in any language, including Chinese, Japanese, and Korean, whose characters are two
+  columns wide. That also fixes misread rows for app names in those scripts on English
+  Windows. If winget's output still can't be read, the scan shows a warning instead.
+
 ## [2.0.0] - 2026-10-01
 
 Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/.NET 8 application.

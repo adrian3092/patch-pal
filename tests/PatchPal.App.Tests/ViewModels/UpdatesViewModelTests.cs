@@ -124,6 +124,33 @@ public class UpdatesViewModelTests : IDisposable
         Assert.Contains("results may be incomplete", vm.Warnings[0]);
     }
 
+    [Fact]
+    public async Task EmptyState_WithWarnings_DoesNotClaimEverythingIsUpToDate()
+    {
+        var throwing = new ThrowingSource();
+        var scan = new ScanService(new FakePrograms(), [throwing]);
+        var vm = new UpdatesViewModel(scan,
+            new BatchUpgradeRunner(new UpgradeRunner([throwing]), new HistoryStore(_dir.FullName)),
+            new ScanState(), new AppSettings());
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        await vm.ScanAsync();
+        Assert.Equal("No updates found", vm.EmptyStateText);
+        Assert.Contains(nameof(UpdatesViewModel.EmptyStateText), changed);   // the page re-reads it
+    }
+
+    [Fact]
+    public async Task EmptyState_WhenEverySourceAnswered_SaysEverythingIsUpToDate()
+    {
+        var choco = new ChocoSource(new FakeRunner());              // nothing outdated
+        var scan = new ScanService(new FakePrograms(), [choco]);
+        var vm = new UpdatesViewModel(scan,
+            new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
+            new ScanState(), new AppSettings());
+        await vm.ScanAsync();
+        Assert.Equal("Everything is up to date", vm.EmptyStateText);
+    }
+
     // winget lists Edge as upgradable, but its MSI-only package can't upgrade the copy Windows
     // ships (0x8A15008E), so Edge must be shown as self-updating and never sent to winget.
     private (UpdatesViewModel Vm, FakeRunner Runner) SetupWithEdge()

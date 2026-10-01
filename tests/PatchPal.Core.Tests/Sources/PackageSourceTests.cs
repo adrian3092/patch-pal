@@ -79,6 +79,16 @@ public class PackageSourceTests
     }
 
     [Fact]
+    public async Task ListOutdated_TableItCannotRead_Throws()
+    {
+        // A table whose columns can't be found must surface as a warning, not as "no updates".
+        var runner = new FakeProcessRunner { ExitCode = 0, StdOut = "Name Id\n" + new string('-', 20) + "\nfoo bar\n" };
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => new WingetSource(runner).ListOutdatedAsync());
+        Assert.Contains("couldn't read", ex.Message);
+    }
+
+    [Fact]
     public async Task ListOutdated_ZeroExitWithNoTable_ReturnsEmpty()
     {
         var runner = new FakeProcessRunner { ExitCode = 0, StdOut = "No installed package found matching input criteria.\n" };
