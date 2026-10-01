@@ -47,6 +47,11 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
 - An upgrade that fails for lack of an internet connection (winget `0x8A150107`) no
   longer reports "No installer applicable"; that message now goes to the code that
   means it (`0x8A150010`).
+- **.NET SDK updates no longer go missing.** The SDK registers `8.4.2226.x` in
+  Programs and Features while winget calls the same install `8.0.422`, so comparing the
+  registry number with winget's `8.0.425` hid the update. When winget names the exact
+  installed program, Patch Pal now compares winget's own installed and available
+  versions, including winget's "< X" (older than X) notation.
 
 ## [1.0.3] - 2026-06-04
 

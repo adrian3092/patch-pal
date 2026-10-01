@@ -58,6 +58,56 @@ public class ReportMergerTests
         => Assert.Equal(3, UpdateRows().Count);
 
     [Fact]
+    public void ExactNameMatch_ComparesInThePackageManagersVersionScheme()
+    {
+        // The .NET SDK registers 8.4.2226.27003 in Programs and Features, which winget maps to
+        // package version 8.0.422. Comparing the registry number with 8.0.425 hid the update.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Microsoft .NET SDK 8.0.422 (x64)", "8.4.2226.27003", "Microsoft Corporation")],
+            [new UpgradeCandidate("Microsoft .NET SDK 8.0.422 (x64)", "Microsoft.DotNet.SDK.8", "8.0.422", "8.0.425", "winget")],
+            ["winget"]);
+        var sdk = Assert.Single(rows);
+        Assert.True(sdk.IsUpdate);
+        Assert.Equal("8.0.422", sdk.Current);                // not "8.4.2226.27003 -> 8.0.425"
+        Assert.Equal("8.0.425", sdk.Available);
+    }
+
+    [Fact]
+    public void ExactNameMatch_WithUnknownInstalledVersion_FallsBackToRegistryVersion()
+    {
+        // `winget upgrade --include-unknown` prints "Unknown" when it can't read the version.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Contoso App", "2.0.0", "Contoso")],
+            [new UpgradeCandidate("Contoso App", "Contoso.App", "Unknown", "2.0.0", "winget")],
+            ["winget"]);
+        Assert.False(Assert.Single(rows).IsUpdate);
+    }
+
+    [Fact]
+    public void ExactNameMatch_FromChocolatey_KeepsTheRegistryVersion()
+    {
+        // Chocolatey names are package ids and its installed version is its own record, which
+        // goes stale when the app updates itself; only winget reports the install's version.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Discord", "1.0.9040", "Discord Inc.")],
+            [new UpgradeCandidate("discord", "discord", "1.0.9015", "1.0.9040", "chocolatey")],
+            ["chocolatey"]);
+        Assert.False(Assert.Single(rows).IsUpdate);
+    }
+
+    [Fact]
+    public void FuzzyMatch_AlreadyAtAvailableVersion_IsNotAnUpdate()
+    {
+        // winget keyed this row off an older entry (14.44) than the redistributable actually
+        // installed, which is already at the available version.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.51.36231", "14.51.36231.0", "Microsoft Corporation")],
+            [new UpgradeCandidate("Microsoft Visual C++ 2015-2022 Redistributable (…", "Microsoft.VCRedist.2015+.x64", "14.44.35211.0", "14.51.36231.0", "winget")],
+            ["winget"]);
+        Assert.DoesNotContain(rows, r => r.IsUpdate);
+    }
+
+    [Fact]
     public void UnrelatedProgram_IsNotFalselyMatched()
     {
         var chrome = MergedRows().First(r => r.Name == "Google Chrome");

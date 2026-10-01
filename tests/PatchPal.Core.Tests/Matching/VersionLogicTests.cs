@@ -9,6 +9,7 @@ public class VersionLogicTests
     [InlineData("14.44.35211.0", "14.51.36231.0", true)]   // older -> update
     [InlineData("14.51.36231.0", "14.51.36231.0", false)]  // equal -> no update
     [InlineData("14.52.0.0", "14.51.36231.0", false)]      // installed newer -> no update
+    [InlineData("< 8.0.425", "8.0.425", true)]             // winget: installed is below 8.0.425 -> update
     public void IsNewerVersion_ComparesParsableVersions(string current, string available, bool expected)
         => Assert.Equal(expected, VersionLogic.IsNewerVersion(current, available));
 
@@ -18,6 +19,14 @@ public class VersionLogicTests
     [InlineData("1.2.3", "unknown")]   // unparseable available -> assume update
     public void IsNewerVersion_AssumesUpdateWhenUnparseable(string current, string available)
         => Assert.True(VersionLogic.IsNewerVersion(current, available));
+
+    [Theory]
+    [InlineData("8.0.422", true)]
+    [InlineData("> 8.0.422", true)]     // winget marks out-of-range installs with < or >
+    [InlineData("Unknown", false)]      // `winget upgrade --include-unknown`
+    [InlineData("", false)]
+    public void IsParsable_DetectsAUsableVersion(string text, bool expected)
+        => Assert.Equal(expected, VersionLogic.IsParsable(text));
 
     [Fact]
     public void GetVersionValue_StripsNonVersionCharacters()
