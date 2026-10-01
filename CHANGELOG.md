@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-06-12
+## [2.0.0] - 2026-10-01
 
 Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/.NET 8 application.
 
@@ -16,6 +16,7 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
   system-components toggle.
 - Self-contained single-exe builds for x64 and ARM64 — no PowerShell or .NET install needed.
 - Parallel source queries — scans are faster than v1.
+- Patch Pal band-aid icon on the exe, the title bar, and the installer.
 
 ### Changed
 - **Breaking:** the application is renamed from WinUpdateChecker to Patch Pal
@@ -31,6 +32,9 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
   to invoke `PatchPal.exe` — see the README migration table.
 - Failed package-manager queries now surface as visible warnings instead of being
   silently treated as "no updates".
+- v1's "Up to date / unknown" status is split in two: "Up to date" (a package manager
+  confirms the program is current) and "Not tracked" (no package manager knows it).
+  CSV and HTML reports use the new labels.
 
 ### Removed
 - **Breaking:** `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat`. The installer
