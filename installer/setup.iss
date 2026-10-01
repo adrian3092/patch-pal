@@ -16,7 +16,7 @@
 #define MyAppName        "Patch Pal"
 #define MyAppDirName     "PatchPal"
 #define MyAppPublisher   "Patch Pal contributors"
-#define MyAppURL         "https://github.com/adrian3092/win-update-checker"
+#define MyAppURL         "https://github.com/adrian3092/patch-pal"
 #define MyAppExeName     "PatchPal.exe"
 
 [Setup]

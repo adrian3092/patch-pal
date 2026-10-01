@@ -44,7 +44,7 @@ Pick whichever you prefer — both ship from the same GitHub release page, per a
 
 ### Installer (recommended for most users)
 
-Download the installer for your architecture from the [latest release](https://github.com/adrian3092/win-update-checker/releases/latest):
+Download the installer for your architecture from the [latest release](https://github.com/adrian3092/patch-pal/releases/latest):
 
 - `PatchPal-Setup-x.y.z-x64.exe` — Intel/AMD PCs
 - `PatchPal-Setup-x.y.z-arm64.exe` — ARM PCs (Snapdragon, etc.)
@@ -63,8 +63,8 @@ That's it. The first scan takes 5–15 seconds.
 ### From source
 
 ```powershell
-git clone https://github.com/adrian3092/win-update-checker.git
-cd win-update-checker
+git clone https://github.com/adrian3092/patch-pal.git
+cd patch-pal
 dotnet run --project src/PatchPal.App
 ```
 
