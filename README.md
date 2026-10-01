@@ -195,6 +195,17 @@ Get-FileHash .\PatchPal-Setup-2.0.0-x64.exe -Algorithm SHA256
 
 Compare against the published hash before running. Once the project is enrolled in [SignPath OSS signing](docs/SIGNING.md), installer downloads will also carry a verifiable Authenticode signature — check the file's **Properties → Digital Signatures** tab.
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+- Committers and reviewers: [@adrian3092](https://github.com/adrian3092)
+- Approvers: [@adrian3092](https://github.com/adrian3092)
+
+Signed releases are built from this repository by GitHub Actions, and every release is approved by hand before it is signed. Releases published before the project joined the SignPath Foundation program (v2.0.0 and earlier) are unsigned.
+
+**Privacy policy:** This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. Patch Pal has no telemetry. To find and install updates it runs the package managers on your PC (winget, Scoop, Chocolatey), which contact their own servers under their own privacy policies — for winget, the [Microsoft Privacy Statement](https://privacy.microsoft.com/privacystatement).
+
 ## Building releases
 
 ```powershell
