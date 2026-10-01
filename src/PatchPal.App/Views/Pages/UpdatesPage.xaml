@@ -76,7 +76,8 @@
                         <Border CornerRadius="6" Padding="12,9" Margin="0,0,0,6"
                                 Background="{DynamicResource ControlFillColorDefaultBrush}">
                             <DockPanel>
-                                <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" />
+                                <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsSelected}" VerticalAlignment="Center"
+                                          IsEnabled="{Binding IsUpdatable}" />
                                 <!-- right side: state -->
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border CornerRadius="9" Padding="8,1" Margin="0,0,12,0"
@@ -88,6 +89,10 @@
                                                Command="{Binding DataContext.UpdateOneCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                CommandParameter="{Binding}"
                                                Visibility="{Binding CanUpdate, Converter={StaticResource BoolToVis}}" />
+                                    <!-- Apps that install their own updates (Microsoft Edge) get a label, not a button. -->
+                                    <TextBlock Text="Updates itself" VerticalAlignment="Center" FontSize="12" Opacity="0.7"
+                                               ToolTip="This app installs its own updates, so winget can't update it."
+                                               Visibility="{Binding UpdatesItself, Converter={StaticResource BoolToVis}}" />
                                     <StackPanel Orientation="Horizontal">
                                         <StackPanel.Style>
                                             <Style TargetType="StackPanel">

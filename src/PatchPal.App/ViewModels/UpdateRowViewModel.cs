@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using PatchPal.Core.Models;
+using PatchPal.Core.Upgrading;
 
 namespace PatchPal.App.ViewModels;
 
@@ -16,6 +17,12 @@ public sealed partial class UpdateRowViewModel(ReportRow row) : ObservableObject
     public string Status => Row.Status;
     public bool IsUpdate => Row.IsUpdate;
 
+    /// <summary>An update the app installs itself because its package manager can't (Microsoft Edge).</summary>
+    public bool UpdatesItself => IsUpdate && SelfUpdatingApps.IsSelfUpdating(Source, Row.PackageId);
+
+    /// <summary>An update Patch Pal can apply through the row's package manager.</summary>
+    public bool IsUpdatable => IsUpdate && !UpdatesItself;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanUpdate))]
     private RowState _state = RowState.Idle;
@@ -29,6 +36,6 @@ public sealed partial class UpdateRowViewModel(ReportRow row) : ObservableObject
     [ObservableProperty]
     private bool _isSelected;
 
-    /// <summary>Per-row Update button enabled: only for real updates not already running.</summary>
-    public bool CanUpdate => IsUpdate && State is RowState.Idle or RowState.Failed;
+    /// <summary>Per-row Update button enabled: only for updatable rows not already running.</summary>
+    public bool CanUpdate => IsUpdatable && State is RowState.Idle or RowState.Failed;
 }
