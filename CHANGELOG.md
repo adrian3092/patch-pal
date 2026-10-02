@@ -10,6 +10,8 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - Headless runs (`--no-gui`, `--export-csv`, `--export-html`) scan the sources enabled on
   the Settings page and include system components when Settings does. `--source` and
   `--include-system-components` still override it.
+- **Update all** is greyed out when there's nothing Patch Pal can update, for example
+  when only Microsoft Edge (which updates itself) is listed.
 
 ### Fixed
 - **winget updates no longer vanish on non-English Windows.** winget prints its update

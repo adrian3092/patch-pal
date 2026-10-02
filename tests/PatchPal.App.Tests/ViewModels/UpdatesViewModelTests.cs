@@ -153,9 +153,9 @@ public class UpdatesViewModelTests : IDisposable
 
     // winget lists Edge as upgradable, but its MSI-only package can't upgrade the copy Windows
     // ships (0x8A15008E), so Edge must be shown as self-updating and never sent to winget.
-    private (UpdatesViewModel Vm, FakeRunner Runner) SetupWithEdge()
+    private (UpdatesViewModel Vm, FakeRunner Runner) SetupWithEdge(string? upgrades = null)
     {
-        var runner = new FakeRunner { ListOutput = EdgeAndGitUpgrades };
+        var runner = new FakeRunner { ListOutput = upgrades ?? EdgeAndGitUpgrades };
         var sources = new IPackageSource[] { new WingetSource(runner) };
         var scan = new ScanService(
             new FakePrograms(new InstalledProgram("Microsoft Edge", "154.0.4258.37", "Microsoft Corporation"),
@@ -178,6 +178,33 @@ public class UpdatesViewModelTests : IDisposable
         WingetRow("Git", "Git.Git", "2.44.0", "2.45.2", "winget"),
         "2 upgrades available.",
         "");
+
+    private static readonly string EdgeOnlyUpgrades = string.Join('\n',
+        WingetRow("Name", "Id", "Version", "Available", "Source"),
+        new string('-', 70),
+        WingetRow("Microsoft Edge", "Microsoft.Edge", "154.0.4258.37", "154.0.4258.48", "winget"),
+        "1 upgrades available.",
+        "");
+
+    [Fact]
+    public async Task UpdateAll_IsDisabled_WhenNothingCanBeUpdated()
+    {
+        var (vm, _) = SetupWithEdge(EdgeOnlyUpgrades);          // Edge is listed but updates itself
+        await vm.ScanAsync();
+        Assert.Equal(1, vm.UpdateCount);
+        Assert.False(vm.UpdateAllCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task UpdateAll_IsEnabled_AfterAScanFindsUpdates()
+    {
+        var (vm, _) = SetupWithEdge();
+        var rechecked = false;
+        vm.UpdateAllCommand.CanExecuteChanged += (_, _) => rechecked = true;
+        await vm.ScanAsync();
+        Assert.True(vm.UpdateAllCommand.CanExecute(null));
+        Assert.True(rechecked);                                  // the button re-reads its state after a scan
+    }
 
     [Fact]
     public async Task Scan_SelfUpdatingApp_IsListedWithoutUpdateButton()
