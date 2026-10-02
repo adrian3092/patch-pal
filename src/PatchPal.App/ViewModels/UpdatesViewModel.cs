@@ -36,6 +36,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
     private bool _isScanning;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(UpdateAllCommand))]
     private bool _isUpdating;
 
     [ObservableProperty]
@@ -122,7 +123,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
     public Task UpdateAllAsync()
         => RunBatchAsync(Rows.Where(r => r.CanUpdate).ToList(), $"Update all {UpdatableCount} packages?");
 
-    private bool CanUpdateAll() => UpdatableCount > 0;
+    private bool CanUpdateAll() => UpdatableCount > 0 && !IsUpdating;
 
     [RelayCommand]
     public Task UpdateSelectedAsync()

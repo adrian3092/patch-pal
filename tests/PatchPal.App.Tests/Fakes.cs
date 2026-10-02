@@ -15,6 +15,9 @@ public sealed class FakeRunner : IProcessRunner
     public string ListOutput { get; set; } = "";
     public List<(string FileName, string Arguments, bool Elevated)> Calls { get; } = [];
 
+    /// <summary>When set, upgrades wait for it, so a test can look at the app mid-update.</summary>
+    public TaskCompletionSource? UpgradeGate { get; set; }
+
     public bool CommandExists(string command) => true;
 
     public Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken ct = default)
@@ -23,9 +26,10 @@ public sealed class FakeRunner : IProcessRunner
         return Task.FromResult(new ProcessResult(ExitCode, ListOutput, ""));
     }
 
-    public Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default)
+    public async Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default)
     {
         Calls.Add((fileName, arguments, true));
-        return Task.FromResult(new ProcessResult(ExitCode, "", ""));
+        if (UpgradeGate is not null) await UpgradeGate.Task;
+        return new ProcessResult(ExitCode, "", "");
     }
 }
