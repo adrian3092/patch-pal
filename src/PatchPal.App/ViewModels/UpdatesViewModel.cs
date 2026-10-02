@@ -46,6 +46,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UpdateAllLabel))]
+    [NotifyCanExecuteChangedFor(nameof(UpdateAllCommand))]
     private int _updatableCount;                                  // excludes apps that update themselves
 
     public string UpdateAllLabel => $"Update all ({UpdatableCount})";
@@ -117,9 +118,11 @@ public sealed partial class UpdatesViewModel : ObservableObject
             || row.Source.Contains(filter, StringComparison.OrdinalIgnoreCase);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanUpdateAll))]
     public Task UpdateAllAsync()
         => RunBatchAsync(Rows.Where(r => r.CanUpdate).ToList(), $"Update all {UpdatableCount} packages?");
+
+    private bool CanUpdateAll() => UpdatableCount > 0;
 
     [RelayCommand]
     public Task UpdateSelectedAsync()
