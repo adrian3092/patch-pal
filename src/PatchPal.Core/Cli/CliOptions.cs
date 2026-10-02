@@ -1,3 +1,6 @@
+using PatchPal.Core.Scanning;
+using PatchPal.Core.Settings;
+
 namespace PatchPal.Core.Cli;
 
 /// <summary>
@@ -15,6 +18,15 @@ public sealed record CliOptions(
     private static readonly string[] ValidSources = ["winget", "scoop", "chocolatey"];
 
     public bool IsHeadless => NoGui || ExportCsv is not null || ExportHtml is not null || Error is not null;
+
+    /// <summary>The scan to run: the command line's choices, falling back to the Settings page's.</summary>
+    public ScanOptions ToScanOptions(AppSettings settings)
+    {
+        var configured = ScanOptions.FromSettings(settings);
+        return new ScanOptions(
+            Sources.Count > 0 ? Sources : configured.Sources,
+            IncludeSystemComponents || configured.IncludeSystemComponents);
+    }
 
     public static CliOptions Parse(string[] args)
     {

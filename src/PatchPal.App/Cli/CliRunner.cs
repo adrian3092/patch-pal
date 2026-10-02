@@ -2,6 +2,7 @@ using System.IO;
 using PatchPal.Core.Cli;
 using PatchPal.Core.Export;
 using PatchPal.Core.Scanning;
+using PatchPal.Core.Settings;
 using PatchPal.Core.Sources;
 
 namespace PatchPal.App.Cli;
@@ -16,7 +17,9 @@ public static class CliRunner
           --export-csv <path>           Write a CSV report and exit
           --export-html <path>          Write a stand-alone HTML report and exit
           --source <list>               Restrict sources: winget,scoop,chocolatey
+                                        (default: the sources enabled in Settings)
           --include-system-components   Include Windows components and hotfixes
+                                        (also on when enabled in Settings)
         """;
 
     public static async Task<int> RunAsync(CliOptions options)
@@ -38,7 +41,7 @@ public static class CliRunner
             var service = new ScanService(new RegistryScanner(), sources);
 
             Console.WriteLine("Scanning installed programs and querying package managers...");
-            var result = await service.ScanAsync(new ScanOptions(options.Sources, options.IncludeSystemComponents));
+            var result = await service.ScanAsync(options.ToScanOptions(new SettingsStore().Load()));
 
             foreach (var warning in result.Warnings)
                 Console.Error.WriteLine($"warning: {warning}");

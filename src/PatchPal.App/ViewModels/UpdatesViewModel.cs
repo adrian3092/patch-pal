@@ -76,8 +76,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
         _scanCts = new CancellationTokenSource();
         try
         {
-            var options = new ScanOptions(
-                AllSourcesExcept(_settings.DisabledSources), _settings.IncludeSystemComponents);
+            var options = ScanOptions.FromSettings(_settings);
             var result = await Task.Run(() => _scanService.ScanAsync(options, _scanCts.Token), _scanCts.Token);
 
             _scanState.LastResult = result;
@@ -108,11 +107,6 @@ public sealed partial class UpdatesViewModel : ObservableObject
             _scanCts = null;
         }
     }
-
-    private static List<string> AllSourcesExcept(List<string> disabled)
-        => disabled.Count == 0
-            ? []
-            : new[] { "winget", "scoop", "chocolatey" }.Except(disabled, StringComparer.OrdinalIgnoreCase).ToList();
 
     /// <summary>Filter predicate shared by the page's CollectionView and the tests.</summary>
     public bool MatchesFilter(UpdateRowViewModel row, string filter)

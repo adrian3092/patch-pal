@@ -6,6 +6,11 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Changed
+- Headless runs (`--no-gui`, `--export-csv`, `--export-html`) scan the sources enabled on
+  the Settings page and include system components when Settings does. `--source` and
+  `--include-system-components` still override it.
+
 ### Fixed
 - **winget updates no longer vanish on non-English Windows.** winget prints its update
   list in the Windows display language, and Patch Pal only recognized the English
