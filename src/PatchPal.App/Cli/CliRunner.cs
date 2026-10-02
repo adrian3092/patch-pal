@@ -22,62 +22,83 @@ public static class CliRunner
                                         (also on when enabled in Settings)
         """;
 
-    public static async Task<int> RunAsync(CliOptions options)
+    public static Task<int> RunAsync(CliOptions options)
     {
         try { Console.OutputEncoding = System.Text.Encoding.UTF8; }
         catch (IOException) { /* no console handle — keep default */ }
 
+        var runner = new ProcessRunner();
+        var sources = new IPackageSource[] { new WingetSource(runner), new ScoopSource(runner), new ChocoSource(runner) };
+        return RunAsync(options, new ScanService(new RegistryScanner(), sources),
+            () => new SettingsStore().Load(), Console.Out, Console.Error);
+    }
+
+    /// <summary>Runs headless with the given scanner and settings, writing to the given streams.</summary>
+    public static async Task<int> RunAsync(
+        CliOptions options, ScanService service, Func<AppSettings> loadSettings, TextWriter output, TextWriter error)
+    {
         if (options.Error is not null)
         {
-            Console.Error.WriteLine($"error: {options.Error}");
-            Console.Error.WriteLine(Usage);
+            error.WriteLine($"error: {options.Error}");
+            error.WriteLine(Usage);
             return 1;
         }
 
         try
         {
-            var runner = new ProcessRunner();
-            var sources = new IPackageSource[] { new WingetSource(runner), new ScoopSource(runner), new ChocoSource(runner) };
-            var service = new ScanService(new RegistryScanner(), sources);
-
-            Console.WriteLine("Scanning installed programs and querying package managers...");
-            var result = await service.ScanAsync(options.ToScanOptions(new SettingsStore().Load()));
+            output.WriteLine("Scanning installed programs and querying package managers...");
+            var result = await service.ScanAsync(options.ToScanOptions(LoadSettings(loadSettings, error)));
 
             foreach (var warning in result.Warnings)
-                Console.Error.WriteLine($"warning: {warning}");
+                error.WriteLine($"warning: {warning}");
             if (result.EnabledSources.Count == 0)
-                Console.Error.WriteLine("warning: no supported package manager found (winget, scoop, chocolatey).");
+                error.WriteLine("warning: no supported package manager found (winget, scoop, chocolatey).");
 
             if (options.ExportCsv is not null)
             {
                 CsvExporter.Write(result.Rows, options.ExportCsv);
-                Console.WriteLine($"CSV written to {options.ExportCsv}");
+                output.WriteLine($"CSV written to {options.ExportCsv}");
                 return 0;
             }
             if (options.ExportHtml is not null)
             {
                 HtmlExporter.Write(result.Rows, options.ExportHtml);
-                Console.WriteLine($"HTML written to {options.ExportHtml}");
+                output.WriteLine($"HTML written to {options.ExportHtml}");
                 return 0;
             }
 
-            PrintTable(result);
+            PrintTable(result, output);
             return 0;
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"error: {ex.Message}");
+            error.WriteLine($"error: {ex.Message}");
             return 1;
         }
     }
 
-    private static void PrintTable(ScanResult result)
+    // A scheduled report should still run when settings.json can't be read (locked, or denied
+    // to the account running the task); say so and use the defaults.
+    private static AppSettings LoadSettings(Func<AppSettings> loadSettings, TextWriter error)
+    {
+        try
+        {
+            return loadSettings();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            error.WriteLine($"warning: couldn't read settings, using defaults ({ex.Message})");
+            return new AppSettings();
+        }
+    }
+
+    private static void PrintTable(ScanResult result, TextWriter output)
     {
         var updates = result.Rows.Where(r => r.IsUpdate).ToList();
-        Console.WriteLine();
-        Console.WriteLine($"Updates available: {updates.Count} of {result.Rows.Count} entries");
-        Console.WriteLine($"Sources queried: {string.Join(", ", result.EnabledSources)}");
-        Console.WriteLine();
+        output.WriteLine();
+        output.WriteLine($"Updates available: {updates.Count} of {result.Rows.Count} entries");
+        output.WriteLine($"Sources queried: {string.Join(", ", result.EnabledSources)}");
+        output.WriteLine();
         if (updates.Count == 0) return;
 
         string[] headers = ["Name", "Current", "Available", "PackageId", "Source"];
@@ -88,10 +109,10 @@ public static class CliRunner
             .Select((h, i) => Math.Max(h.Length, cells.Max(row => row[i].Length)))
             .ToArray();
 
-        Console.WriteLine(FormatRow(headers, widths));
-        Console.WriteLine(FormatRow(widths.Select(w => new string('-', w)).ToArray(), widths));
+        output.WriteLine(FormatRow(headers, widths));
+        output.WriteLine(FormatRow(widths.Select(w => new string('-', w)).ToArray(), widths));
         foreach (var row in cells)
-            Console.WriteLine(FormatRow(row, widths));
+            output.WriteLine(FormatRow(row, widths));
 
         static string FormatRow(string[] cols, int[] widths)
             => string.Join("  ", cols.Select((c, i) => c.PadRight(widths[i]))).TrimEnd();
