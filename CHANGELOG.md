@@ -7,14 +7,12 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 ## [Unreleased]
 
 ### Changed
-- Headless runs (`--no-gui`, `--export-csv`, `--export-html`) scan the sources enabled on
-  the Settings page and include system components when Settings does. `--source` and
-  `--include-system-components` still override it.
-- **Update all** is greyed out when there's nothing Patch Pal can update, for example
-  when only Microsoft Edge (which updates itself) is listed.
-- The All apps page shows "Updates itself" for Microsoft Edge, as the Updates page does.
-- A long failure message on the Updates page is cut short with "…" so the app name stays
-  visible; hover over it for the whole message and the installer log.
+- Headless runs (`--no-gui`, `--export-csv`, `--export-html`) use the Settings page's
+  source and system-component choices, as the Updates page does. `--source` picks the
+  sources instead, and `--include-system-components` includes system components either way.
+- A failed update's message now appears under the app name, where it has the row's full
+  width; it is cut short with "…" only in a narrow window. Hover over it for the whole
+  message and the installer log.
 
 ### Fixed
 - **winget updates no longer vanish on non-English Windows.** winget prints its update
@@ -23,6 +21,9 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   in any language, including Chinese, Japanese, and Korean, whose characters are two
   columns wide. That also fixes misread rows for app names in those scripts on English
   Windows. If winget's output still can't be read, the scan shows a warning instead.
+- **Update all** is greyed out when there's nothing Patch Pal can update (for example,
+  only Microsoft Edge, which updates itself, is listed) and while an update is running.
+- The All apps page shows "Updates itself" for Microsoft Edge, as the Updates page does.
 
 ## [2.0.0] - 2026-10-01
 
