@@ -38,6 +38,14 @@ public class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Load_NullSourceList_MeansNoneSwitchedOff()
+    {
+        // A hand-edited file can say "DisabledSources": null; JSON overwrites the default with it.
+        File.WriteAllText(Path.Combine(_dir.FullName, "settings.json"), """{ "DisabledSources": null }""");
+        Assert.Empty(Store().Load().DisabledSources);
+    }
+
+    [Fact]
     public void Load_CorruptFile_BacksUpAndReturnsDefaults()
     {
         var path = Path.Combine(_dir.FullName, "settings.json");
