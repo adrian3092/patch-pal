@@ -119,9 +119,11 @@
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
+                                    <!-- Trimmed so a long message can't push the app name out; hover for all of it. -->
                                     <TextBlock VerticalAlignment="Center" FontSize="12"
+                                               MaxWidth="280" TextTrimming="CharacterEllipsis"
                                                Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                               ToolTip="{Binding Log}">
+                                               ToolTip="{Binding FailureDetails}">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Collapsed" />

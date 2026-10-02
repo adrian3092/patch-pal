@@ -23,6 +23,9 @@ public sealed partial class UpdateRowViewModel(ReportRow row) : ObservableObject
     /// <summary>An update Patch Pal can apply through the row's package manager.</summary>
     public bool IsUpdatable => IsUpdate && !UpdatesItself;
 
+    /// <summary>Hover text for a failed row: the whole message, which may be trimmed on screen, then the log.</summary>
+    public string FailureDetails => string.IsNullOrWhiteSpace(Log) ? StateMessage : $"{StateMessage}\n\n{Log}";
+
     /// <summary>Status as shown on the All apps page: an app that updates itself says so.</summary>
     public string DisplayStatus => UpdatesItself ? "Updates itself" : Status;
 
@@ -31,9 +34,11 @@ public sealed partial class UpdateRowViewModel(ReportRow row) : ObservableObject
     private RowState _state = RowState.Idle;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FailureDetails))]
     private string _stateMessage = "";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FailureDetails))]
     private string _log = "";
 
     [ObservableProperty]
