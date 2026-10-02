@@ -214,6 +214,43 @@ public class UpdatesViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Scan_CanBeCancelledWhileItRuns()
+    {
+        // During a scan the Scan button reads "Cancel"; it must stay clickable and stop the scan.
+        var runner = new FakeRunner { ListGate = new TaskCompletionSource() };
+        var choco = new ChocoSource(runner);
+        var vm = new UpdatesViewModel(new ScanService(new FakePrograms(), [choco]),
+            new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
+            new ScanState(), new AppSettings());
+
+        var scanning = vm.ScanCommand.ExecuteAsync(null);
+        Assert.True(vm.ScanCommand.CanExecute(null));
+        await vm.ScanCommand.ExecuteAsync(null);                 // press Cancel
+        await scanning;
+
+        Assert.Equal("Scan cancelled", vm.LastScanText);
+        Assert.False(vm.IsScanning);
+    }
+
+    [Fact]
+    public async Task Scan_UsesTheSettingsCurrentWhenItStarts()
+    {
+        // The Updates page stays alive across navigation, so it mustn't keep the settings it
+        // was created with: a source switched off on the Settings page meanwhile is skipped.
+        var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
+        var choco = new ChocoSource(runner);
+        var settings = new AppSettings();
+        var vm = new UpdatesViewModel(new ScanService(new FakePrograms(), [choco]),
+            new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
+            new ScanState(), () => settings);
+
+        settings = new AppSettings { DisabledSources = ["chocolatey"] };
+        await vm.ScanAsync();
+
+        Assert.Empty(runner.Calls);
+    }
+
+    [Fact]
     public async Task Scan_SkipsSourcesSwitchedOffInSettings()
     {
         var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
