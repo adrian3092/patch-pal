@@ -213,23 +213,67 @@ public class UpdatesViewModelTests : IDisposable
         Assert.True(vm.UpdateAllCommand.CanExecute(null));
     }
 
+    private UpdatesViewModel ScanOnlyViewModel(FakeRunner runner, ManualClock clock)
+    {
+        var choco = new ChocoSource(runner);
+        return new UpdatesViewModel(new ScanService(new FakePrograms(), [choco]),
+            new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
+            new ScanState(), () => new AppSettings(), clock);
+    }
+
     [Fact]
     public async Task Scan_CanBeCancelledWhileItRuns()
     {
         // During a scan the Scan button reads "Cancel"; it must stay clickable and stop the scan.
         var runner = new FakeRunner { ListGate = new TaskCompletionSource() };
-        var choco = new ChocoSource(runner);
-        var vm = new UpdatesViewModel(new ScanService(new FakePrograms(), [choco]),
-            new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
-            new ScanState(), new AppSettings());
+        var clock = new ManualClock();
+        var vm = ScanOnlyViewModel(runner, clock);
 
         var scanning = vm.ScanCommand.ExecuteAsync(null);
         Assert.True(vm.ScanCommand.CanExecute(null));
+        clock.Advance(TimeSpan.FromSeconds(2));
         await vm.ScanCommand.ExecuteAsync(null);                 // press Cancel
         await scanning;
 
         Assert.Equal("Scan cancelled", vm.LastScanText);
         Assert.False(vm.IsScanning);
+    }
+
+    [Fact]
+    public async Task Scan_DoubleClick_DoesNotCancelTheScanItStarted()
+    {
+        // A double-click's second press lands on the same button, which by then reads "Cancel".
+        var runner = new FakeRunner { ListGate = new TaskCompletionSource() };
+        var clock = new ManualClock();
+        var vm = ScanOnlyViewModel(runner, clock);
+
+        var scanning = vm.ScanCommand.ExecuteAsync(null);
+        clock.Advance(TimeSpan.FromMilliseconds(150));
+        await vm.ScanCommand.ExecuteAsync(null);
+        Assert.True(vm.IsScanning);
+
+        runner.ListGate.SetResult();
+        await scanning;
+        Assert.Equal("Last scanned 09:30", vm.LastScanText);
+    }
+
+    [Fact]
+    public async Task Scan_Cancelled_KeepsTheLastScanTime()
+    {
+        // The previous results stay on screen after a cancel, so their time stays too.
+        var runner = new FakeRunner();
+        var clock = new ManualClock();
+        var vm = ScanOnlyViewModel(runner, clock);
+        await vm.ScanAsync();                                    // 09:30
+
+        runner.ListGate = new TaskCompletionSource();
+        clock.Advance(TimeSpan.FromMinutes(5));
+        var scanning = vm.ScanCommand.ExecuteAsync(null);
+        clock.Advance(TimeSpan.FromSeconds(2));
+        await vm.ScanCommand.ExecuteAsync(null);                 // press Cancel
+        await scanning;
+
+        Assert.Equal("Scan cancelled · last scanned 09:30", vm.LastScanText);
     }
 
     [Fact]

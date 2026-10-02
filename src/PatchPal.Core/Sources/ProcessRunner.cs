@@ -70,7 +70,21 @@ public sealed class ProcessRunner : IProcessRunner
         using var _ = proc;
         var stdOut = proc.StandardOutput.ReadToEndAsync(ct);
         var stdErr = proc.StandardError.ReadToEndAsync(ct);
-        await proc.WaitForExitAsync(ct);
+        try
+        {
+            await proc.WaitForExitAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancelling only stops the wait; end the process (and the cmd.exe wrapper's child)
+            // too, or the package manager keeps running after the user cancels the scan.
+            try { proc.Kill(entireProcessTree: true); }
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+                // It already exited, or Windows refused; there's nothing more to do.
+            }
+            throw;
+        }
         return new ProcessResult(proc.ExitCode, await stdOut, await stdErr);
     }
 
