@@ -196,6 +196,40 @@ public class UpdatesViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateAll_IsDisabled_WhileAnUpdateRuns()
+    {
+        var (vm, runner) = SetupWithEdge();
+        await vm.ScanAsync();
+        runner.UpgradeGate = new TaskCompletionSource();
+        var rechecked = false;
+        vm.UpdateAllCommand.CanExecuteChanged += (_, _) => rechecked = true;
+        var updating = vm.UpdateOneAsync(vm.Rows.Single(r => r.Name == "Git"));
+
+        Assert.True(rechecked);                                  // the button greys out right away
+        Assert.False(vm.UpdateAllCommand.CanExecute(null));      // clicking it now would do nothing
+
+        runner.UpgradeGate.SetResult();
+        await updating;
+        Assert.True(vm.UpdateAllCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Scan_SkipsSourcesSwitchedOffInSettings()
+    {
+        var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
+        var choco = new ChocoSource(runner);
+        var scan = new ScanService(new FakePrograms(new InstalledProgram("7zip", "23.01", "Igor Pavlov")), [choco]);
+        var vm = new UpdatesViewModel(scan,
+            new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
+            new ScanState(), new AppSettings { DisabledSources = ["chocolatey"] });
+
+        await vm.ScanAsync();
+
+        Assert.Empty(runner.Calls);                              // Chocolatey was never asked
+        Assert.Empty(vm.Rows);
+    }
+
+    [Fact]
     public async Task UpdateAll_IsEnabled_AfterAScanFindsUpdates()
     {
         var (vm, _) = SetupWithEdge();
