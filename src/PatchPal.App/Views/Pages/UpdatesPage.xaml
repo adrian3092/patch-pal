@@ -84,7 +84,8 @@
                                             Background="{DynamicResource ControlFillColorSecondaryBrush}">
                                         <TextBlock Text="{Binding Source}" FontSize="11" Opacity="0.8" />
                                     </Border>
-                                    <!-- Idle/Failed: button. Updating: progress. Succeeded: check. -->
+                                    <!-- Idle/Failed: button (a failure's message shows under the name).
+                                         Updating: progress. Succeeded: check. -->
                                     <ui:Button Content="Update"
                                                Command="{Binding DataContext.UpdateOneCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                CommandParameter="{Binding}"
@@ -119,9 +120,19 @@
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                    <!-- Trimmed so a long message can't push the app name out; hover for all of it. -->
-                                    <TextBlock VerticalAlignment="Center" FontSize="12"
-                                               MaxWidth="280" TextTrimming="CharacterEllipsis"
+                                </StackPanel>
+                                <!-- middle: name, versions, and why an update failed -->
+                                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Current}" Opacity="0.6" FontSize="12" />
+                                        <TextBlock Text=" → " Opacity="0.6" FontSize="12" />
+                                        <TextBlock Text="{Binding Available}" FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SystemFillColorSuccessBrush}" />
+                                    </StackPanel>
+                                    <!-- Under the name the message gets the row's full width, so it is cut short only
+                                         in a narrow window; hover for all of it and the installer log. -->
+                                    <TextBlock FontSize="12" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"
                                                Foreground="{DynamicResource SystemFillColorCriticalBrush}"
                                                ToolTip="{Binding FailureDetails}">
                                         <TextBlock.Style>
@@ -136,16 +147,6 @@
                                         </TextBlock.Style>
                                         <Run Text="✕ " /><Run Text="{Binding StateMessage, Mode=OneWay}" />
                                     </TextBlock>
-                                </StackPanel>
-                                <!-- middle: name + versions -->
-                                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Current}" Opacity="0.6" FontSize="12" />
-                                        <TextBlock Text=" → " Opacity="0.6" FontSize="12" />
-                                        <TextBlock Text="{Binding Available}" FontSize="12" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource SystemFillColorSuccessBrush}" />
-                                    </StackPanel>
                                 </StackPanel>
                             </DockPanel>
                         </Border>
