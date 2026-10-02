@@ -26,7 +26,8 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - The All apps page shows "Updates itself" for Microsoft Edge, as the Updates page does.
 - Leaving the Updates page and coming back no longer empties the list and claims "Everything is
   up to date"; the page keeps its scan results and any update in progress.
-- **Cancel** stops a running scan. The Scan button turned into Cancel but stayed disabled.
+- **Cancel** stops a running scan and the package manager it was waiting on. The Scan button
+  turned into Cancel but stayed disabled.
 
 ## [2.0.0] - 2026-10-01
 

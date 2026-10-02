@@ -38,7 +38,7 @@
             <ui:NavigationView.MenuItems>
                 <!-- Kept alive: the page holds the scan results and any update in progress. -->
                 <ui:NavigationViewItem Content="Updates" TargetPageType="{x:Type pages:UpdatesPage}"
-                                       NavigationCacheMode="Enabled">
+                                       NavigationCacheMode="Required">
                     <ui:NavigationViewItem.Icon>
                         <ui:SymbolIcon Symbol="ArrowCircleUp24" />
                     </ui:NavigationViewItem.Icon>

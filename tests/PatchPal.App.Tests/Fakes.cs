@@ -9,6 +9,16 @@ public sealed class FakePrograms(params InstalledProgram[] programs) : IInstalle
     public IReadOnlyList<InstalledProgram> GetInstalledPrograms(bool includeSystemComponents) => programs;
 }
 
+/// <summary>A clock that only moves when told to; local time is UTC so times read predictably.</summary>
+public sealed class ManualClock : TimeProvider
+{
+    private DateTimeOffset _now = new(2026, 10, 2, 9, 30, 0, TimeSpan.Zero);
+
+    public override DateTimeOffset GetUtcNow() => _now;
+    public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
+    public void Advance(TimeSpan by) => _now += by;
+}
+
 public sealed class FakeRunner : IProcessRunner
 {
     public int ExitCode { get; set; }

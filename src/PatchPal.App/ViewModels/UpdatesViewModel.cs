@@ -18,7 +18,12 @@ public sealed partial class UpdatesViewModel : ObservableObject
     private readonly BatchUpgradeRunner _batchRunner;
     private readonly ScanState _scanState;
     private readonly Func<AppSettings> _settings;
+    private readonly TimeProvider _clock;
     private CancellationTokenSource? _scanCts;
+    private DateTimeOffset _scanStartedAt;
+
+    // A double-click's second press lands on the Scan button after it has turned into Cancel.
+    private static readonly TimeSpan DoubleClickGrace = TimeSpan.FromMilliseconds(500);
 
     /// <summary>Asks the user to confirm a batch; the page wires a dialog, tests stub it.</summary>
     public Func<string, Task<bool>> ConfirmInteraction { get; set; } = _ => Task.FromResult(true);
@@ -66,30 +71,39 @@ public sealed partial class UpdatesViewModel : ObservableObject
     }
 
     /// <param name="settings">Read as each scan starts: the page stays alive while the Settings page changes them.</param>
-    public UpdatesViewModel(ScanService scanService, BatchUpgradeRunner batchRunner, ScanState scanState, Func<AppSettings> settings)
+    public UpdatesViewModel(
+        ScanService scanService, BatchUpgradeRunner batchRunner, ScanState scanState, Func<AppSettings> settings,
+        TimeProvider? clock = null)
     {
         _scanService = scanService;
         _batchRunner = batchRunner;
         _scanState = scanState;
         _settings = settings;
+        _clock = clock ?? TimeProvider.System;
     }
 
     // Concurrent: while a scan runs the button reads "Cancel", and pressing it re-enters here to cancel.
     [RelayCommand(AllowConcurrentExecutions = true)]
     public async Task ScanAsync()
     {
-        if (IsScanning) { _scanCts?.Cancel(); return; }          // Scan button doubles as Cancel
+        if (IsScanning)                                            // Scan button doubles as Cancel
+        {
+            if (_clock.GetUtcNow() - _scanStartedAt >= DoubleClickGrace) _scanCts?.Cancel();
+            return;
+        }
 
         IsScanning = true;
         _scanState.IsScanning = true;
         _scanCts = new CancellationTokenSource();
+        _scanStartedAt = _clock.GetUtcNow();
         try
         {
             var options = ScanOptions.FromSettings(_settings());
             var result = await Task.Run(() => _scanService.ScanAsync(options, _scanCts.Token), _scanCts.Token);
 
+            var now = _clock.GetLocalNow();
             _scanState.LastResult = result;
-            _scanState.LastScanTime = DateTimeOffset.Now;
+            _scanState.LastScanTime = now;
 
             Rows.Clear();
             foreach (var row in result.Rows.Where(r => r.IsUpdate))
@@ -103,11 +117,14 @@ public sealed partial class UpdatesViewModel : ObservableObject
                 Warnings.Add("No package manager detected (winget, Scoop, Chocolatey) — updates cannot be checked.");
             OnPropertyChanged(nameof(EmptyStateText));
 
-            LastScanText = $"Last scanned {DateTimeOffset.Now:HH:mm}";
+            LastScanText = $"Last scanned {now:HH:mm}";
         }
         catch (OperationCanceledException)
         {
-            LastScanText = "Scan cancelled";
+            // The previous results stay on screen, so keep their time.
+            LastScanText = _scanState.LastScanTime is { } last
+                ? $"Scan cancelled · last scanned {last:HH:mm}"
+                : "Scan cancelled";
         }
         finally
         {
