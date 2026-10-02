@@ -17,7 +17,7 @@
     <UseWPF>true</UseWPF>
     <StartupObject>PatchPal.App.Program</StartupObject>
     <AssemblyName>PatchPal</AssemblyName>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <!-- Signed files must carry the project name and the release version (SignPath metadata
          restrictions): "Patch Pal" and a plain version, without the "+commit" suffix. -->
     <Product>Patch Pal</Product>
