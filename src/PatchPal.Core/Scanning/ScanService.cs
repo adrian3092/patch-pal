@@ -1,5 +1,6 @@
 using PatchPal.Core.Matching;
 using PatchPal.Core.Models;
+using PatchPal.Core.Settings;
 using PatchPal.Core.Sources;
 
 namespace PatchPal.Core.Scanning;
@@ -8,6 +9,18 @@ public sealed record ScanOptions(IReadOnlyList<string> Sources, bool IncludeSyst
 {
     /// <summary>All detected sources, no system components.</summary>
     public static ScanOptions Default { get; } = new([], false);
+
+    private static readonly string[] AllSources = ["winget", "scoop", "chocolatey"];
+
+    /// <summary>
+    /// The scan the Settings page describes: every source the user hasn't switched off, plus their
+    /// system-components choice. An empty source list means every detected source.
+    /// </summary>
+    public static ScanOptions FromSettings(AppSettings settings)
+        => new(settings.DisabledSources.Count == 0
+                   ? []
+                   : AllSources.Except(settings.DisabledSources, StringComparer.OrdinalIgnoreCase).ToList(),
+               settings.IncludeSystemComponents);
 }
 
 public sealed record ScanResult(

@@ -85,8 +85,8 @@ Run the same exe with flags for headless use:
 | `--no-gui` | Print available updates to the console and exit |
 | `--export-csv <path>` | Write a CSV report and exit |
 | `--export-html <path>` | Write a stand-alone HTML report and exit |
-| `--source <list>` | Restrict sources: `winget,scoop,chocolatey` |
-| `--include-system-components` | Include Windows components and hotfixes |
+| `--source <list>` | Restrict sources: `winget,scoop,chocolatey` (default: the sources enabled in Settings) |
+| `--include-system-components` | Include Windows components and hotfixes (also on when enabled in Settings) |
 
 ```powershell
 # Print updates to the console
