@@ -18,12 +18,16 @@ public sealed class FakeRunner : IProcessRunner
     /// <summary>When set, upgrades wait for it, so a test can look at the app mid-update.</summary>
     public TaskCompletionSource? UpgradeGate { get; set; }
 
+    /// <summary>When set, scans wait for it (or for cancellation), so a test can act mid-scan.</summary>
+    public TaskCompletionSource? ListGate { get; set; }
+
     public bool CommandExists(string command) => true;
 
-    public Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken ct = default)
+    public async Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken ct = default)
     {
         Calls.Add((fileName, arguments, false));
-        return Task.FromResult(new ProcessResult(ExitCode, ListOutput, ""));
+        if (ListGate is not null) await ListGate.Task.WaitAsync(ct);
+        return new ProcessResult(ExitCode, ListOutput, "");
     }
 
     public async Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default)

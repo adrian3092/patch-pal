@@ -17,7 +17,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
     private readonly ScanService _scanService;
     private readonly BatchUpgradeRunner _batchRunner;
     private readonly ScanState _scanState;
-    private readonly AppSettings _settings;
+    private readonly Func<AppSettings> _settings;
     private CancellationTokenSource? _scanCts;
 
     /// <summary>Asks the user to confirm a batch; the page wires a dialog, tests stub it.</summary>
@@ -56,11 +56,17 @@ public sealed partial class UpdatesViewModel : ObservableObject
     public string EmptyStateText => Warnings.Count > 0 ? "No updates found" : "Everything is up to date";
 
     public UpdatesViewModel() : this(
-        AppServices.ScanService, AppServices.BatchUpgradeRunner, AppServices.ScanState, AppServices.Settings)
+        AppServices.ScanService, AppServices.BatchUpgradeRunner, AppServices.ScanState, () => AppServices.Settings)
     {
     }
 
     public UpdatesViewModel(ScanService scanService, BatchUpgradeRunner batchRunner, ScanState scanState, AppSettings settings)
+        : this(scanService, batchRunner, scanState, () => settings)
+    {
+    }
+
+    /// <param name="settings">Read as each scan starts: the page stays alive while the Settings page changes them.</param>
+    public UpdatesViewModel(ScanService scanService, BatchUpgradeRunner batchRunner, ScanState scanState, Func<AppSettings> settings)
     {
         _scanService = scanService;
         _batchRunner = batchRunner;
@@ -68,7 +74,8 @@ public sealed partial class UpdatesViewModel : ObservableObject
         _settings = settings;
     }
 
-    [RelayCommand]
+    // Concurrent: while a scan runs the button reads "Cancel", and pressing it re-enters here to cancel.
+    [RelayCommand(AllowConcurrentExecutions = true)]
     public async Task ScanAsync()
     {
         if (IsScanning) { _scanCts?.Cancel(); return; }          // Scan button doubles as Cancel
@@ -78,7 +85,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
         _scanCts = new CancellationTokenSource();
         try
         {
-            var options = ScanOptions.FromSettings(_settings);
+            var options = ScanOptions.FromSettings(_settings());
             var result = await Task.Run(() => _scanService.ScanAsync(options, _scanCts.Token), _scanCts.Token);
 
             _scanState.LastResult = result;

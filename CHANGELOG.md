@@ -24,6 +24,9 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **Update all** is greyed out when there's nothing Patch Pal can update (for example,
   only Microsoft Edge, which updates itself, is listed) and while an update is running.
 - The All apps page shows "Updates itself" for Microsoft Edge, as the Updates page does.
+- Leaving the Updates page and coming back no longer empties the list and claims "Everything is
+  up to date"; the page keeps its scan results and any update in progress.
+- **Cancel** stops a running scan. The Scan button turned into Cancel but stayed disabled.
 
 ## [2.0.0] - 2026-10-01
 
