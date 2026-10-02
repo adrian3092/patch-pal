@@ -35,7 +35,7 @@
                             Background="{DynamicResource ControlFillColorDefaultBrush}">
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Status}" FontSize="12" Opacity="0.7" Margin="0,0,12,0"
+                                <TextBlock Text="{Binding DisplayStatus}" FontSize="12" Opacity="0.7" Margin="0,0,12,0"
                                            Visibility="{Binding IsUpdate, Converter={StaticResource BoolToVis}}" />
                                 <Border CornerRadius="9" Padding="8,1"
                                         Background="{DynamicResource ControlFillColorSecondaryBrush}"

@@ -12,6 +12,7 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   `--include-system-components` still override it.
 - **Update all** is greyed out when there's nothing Patch Pal can update, for example
   when only Microsoft Edge (which updates itself) is listed.
+- The All apps page shows "Updates itself" for Microsoft Edge, as the Updates page does.
 
 ### Fixed
 - **winget updates no longer vanish on non-English Windows.** winget prints its update

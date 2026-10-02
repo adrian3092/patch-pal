@@ -43,4 +43,22 @@ public class AllAppsViewModelTests
         Assert.True(vm.MatchesFilter(notepad, "tracked"));       // status text
         Assert.False(vm.MatchesFilter(notepad, "winget"));
     }
+
+    [Fact]
+    public void SelfUpdatingApp_ShowsUpdatesItself_LikeTheUpdatesPage()
+    {
+        var result = new ScanResult(
+            [
+                new ReportRow("Microsoft Edge", "Microsoft Corporation", "154.0.4258.37", "154.0.4258.48", "Update available", "Microsoft.Edge", "winget"),
+                new ReportRow("7zip", "Igor Pavlov", "23.01", "24.08", "Update available", "7zip.7zip", "winget"),
+            ],
+            ["winget"], 2, []);
+        var vm = new AllAppsViewModel(new ScanState { LastResult = result });
+        vm.Refresh();
+        var edge = vm.Rows.Single(r => r.Name == "Microsoft Edge");
+
+        Assert.Equal("Updates itself", edge.DisplayStatus);
+        Assert.Equal("Update available", vm.Rows.Single(r => r.Name == "7zip").DisplayStatus);
+        Assert.True(vm.MatchesFilter(edge, "itself"));           // the filter matches what's shown
+    }
 }

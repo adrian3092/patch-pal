@@ -36,7 +36,7 @@ public sealed partial class AllAppsViewModel(ScanState scanState) : ObservableOb
         if (string.IsNullOrWhiteSpace(filter)) return true;
         return row.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)
             || (row.Publisher?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false)
-            || row.Status.Contains(filter, StringComparison.OrdinalIgnoreCase)
+            || row.DisplayStatus.Contains(filter, StringComparison.OrdinalIgnoreCase)
             || row.Source.Contains(filter, StringComparison.OrdinalIgnoreCase);
     }
 }
