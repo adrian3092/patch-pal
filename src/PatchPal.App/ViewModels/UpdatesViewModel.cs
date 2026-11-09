@@ -7,6 +7,9 @@ using PatchPal.Core.Upgrading;
 
 namespace PatchPal.App.ViewModels;
 
+/// <summary>How a batch went: updates that worked, ones that failed, and why History missed any.</summary>
+public sealed record BatchSummary(int Succeeded, int Failed, string? HistoryError);
+
 /// <summary>
 /// Drives the Updates page: scan, filter, select, and run upgrades with in-place
 /// row progress. Constructed with explicit dependencies for testability; the page
@@ -29,7 +32,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
     public Func<string, Task<bool>> ConfirmInteraction { get; set; } = _ => Task.FromResult(true);
 
     /// <summary>Fires after a batch finishes so the page can show a snackbar summary.</summary>
-    public event Action<int, int>? BatchCompleted; // (succeeded, failed)
+    public event Action<BatchSummary>? BatchCompleted;
 
     public ObservableCollection<UpdateRowViewModel> Rows { get; } = [];
     public ObservableCollection<string> Warnings { get; } = [];
@@ -198,10 +201,17 @@ public sealed partial class UpdatesViewModel : ObservableObject
                 }));
 
             var ok = results.Count(r => r.Success);
-            BatchCompleted?.Invoke(ok, results.Count - ok);
+            var historyError = results.Select(r => r.HistoryError).FirstOrDefault(e => e is not null);
+            BatchCompleted?.Invoke(new BatchSummary(ok, results.Count - ok, historyError));
         }
         finally
         {
+            // A row still spinning never got its result: the batch ended before that update reported back.
+            foreach (var row in rows.Where(r => r.State == RowState.Updating))
+            {
+                row.State = RowState.Failed;
+                row.StateMessage = "Stopped before this update reported back.";
+            }
             IsUpdating = false;
         }
     }

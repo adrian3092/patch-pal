@@ -26,12 +26,17 @@ public partial class UpdatesPage
             return await box.ShowDialogAsync() == Wpf.Ui.Controls.MessageBoxResult.Primary;
         };
 
-        _viewModel.BatchCompleted += (ok, failed) =>
+        _viewModel.BatchCompleted += summary =>
         {
-            var appearance = failed == 0 ? ControlAppearance.Success : ControlAppearance.Caution;
+            var message = $"Succeeded: {summary.Succeeded}   Failed: {summary.Failed}";
+            if (summary.HistoryError is not null)
+                message += $"\nCouldn't save to History: {summary.HistoryError}";
+            var appearance = summary.Failed == 0 && summary.HistoryError is null
+                ? ControlAppearance.Success
+                : ControlAppearance.Caution;
             AppServices.SnackbarService.Show(
-                "Upgrade finished", $"Succeeded: {ok}   Failed: {failed}",
-                appearance, TimeSpan.FromSeconds(5));
+                "Upgrade finished", message, appearance,
+                TimeSpan.FromSeconds(summary.HistoryError is null ? 5 : 10));
             _ = _viewModel.ScanAsync();                          // spec: rescan after a batch
         };
 
