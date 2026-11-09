@@ -34,7 +34,13 @@ internal sealed class CrossProcessLock : IDisposable
 
     public void Dispose()
     {
-        _mutex.ReleaseMutex();
-        _mutex.Dispose();
+        try
+        {
+            _mutex.ReleaseMutex();
+        }
+        finally
+        {
+            _mutex.Dispose();
+        }
     }
 }

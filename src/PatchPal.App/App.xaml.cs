@@ -12,6 +12,11 @@ namespace PatchPal.App;
 /// </summary>
 public partial class App : Application
 {
+    // Errors this close together mean something keeps failing; staying open would only loop.
+    private const int RepeatedErrorCount = 3;
+    private static readonly TimeSpan RepeatedErrorWindow = TimeSpan.FromSeconds(10);
+
+    private readonly Queue<DateTime> _recentErrors = new();
     private bool _isShowingError;
 
     public App()
@@ -30,15 +35,17 @@ public partial class App : Application
     {
         var logPath = ErrorLog.Write(e.Exception, "Unexpected error");
 
-        // Before the window is up there is nothing to keep running, so the error still ends the app.
-        e.Handled = MainWindow is { IsLoaded: true };
+        // Before the window is up there is nothing to keep running, and an error that keeps
+        // coming back would only loop; either way the error still ends the app.
+        e.Handled = MainWindow is { IsLoaded: true } && !IsRepeating();
         if (_isShowingError) return;                             // one dialog at a time; the log has the rest
 
         _isShowingError = true;
         try
         {
             var details = logPath is null ? "" : $"\n\nThe details are in {logPath}.";
-            var message = $"Something went wrong: {e.Exception.Message}{details}";
+            var closing = e.Handled ? "" : $"\n\n{AppInfo.ProductName} has to close.";
+            var message = $"Something went wrong: {e.Exception.Message}{details}{closing}";
             if (e.Handled)
                 System.Windows.MessageBox.Show(MainWindow, message, AppInfo.ProductName, MessageBoxButton.OK, MessageBoxImage.Error);
             else
@@ -48,5 +55,14 @@ public partial class App : Application
         {
             _isShowingError = false;
         }
+    }
+
+    private bool IsRepeating()
+    {
+        var now = DateTime.UtcNow;
+        _recentErrors.Enqueue(now);
+        while (now - _recentErrors.Peek() > RepeatedErrorWindow)
+            _recentErrors.Dequeue();
+        return _recentErrors.Count >= RepeatedErrorCount;
     }
 }
