@@ -12,10 +12,18 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   over it. It now leaves the file alone. A save also replaces the file in one step, so a crash
   can't leave half a file. Two Patch Pal windows no longer overwrite each other's entries, and
   each corrupt file is kept as its own timestamped `.bak` instead of replacing the last one.
+- The History page says so when it can't read the history, instead of "No updates applied yet".
+- Changing a setting no longer resets the others when `settings.json` couldn't be read at
+  startup. A change now applies to what the file holds, and when the file can't be read the
+  change lasts until Patch Pal closes, without touching the file.
+- Headless runs warn when `settings.json` is locked, as they already did when access was denied,
+  instead of quietly using the defaults.
 - **A History entry that can't be saved no longer closes Patch Pal.** The app used to crash
   when the batch ended, after skipping the rest of that package manager's updates. Now the
-  batch finishes and its summary says which entry wasn't saved. A row whose update never
-  reported back is marked failed instead of spinning forever.
+  batch finishes, and its summary says History couldn't be saved and why. A row whose update
+  never reported back is marked failed instead of spinning forever.
+- Other unexpected errors are written to `%APPDATA%\PatchPal\error.log` and shown in a
+  message, and Patch Pal stays open instead of disappearing, unless the error keeps coming back.
 - **Microsoft Store apps that winget lists can now be updated.** Patch Pal always asked
   winget's own catalog (`--source winget`), so every update listed under `msstore`, or under
   a source you added yourself, failed with "No installed package matched for upgrade". Each
@@ -34,11 +42,6 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   instead of "no package manager detected".
 - **"Launch Patch Pal" at the end of setup works.** It failed with "CreateProcess failed;
   code 740" because Patch Pal needs administrator rights; it now shows the usual UAC prompt.
-- Other unexpected errors are written to `%APPDATA%\PatchPal\error.log` and shown in a
-  message, and Patch Pal stays open instead of disappearing.
-- The History page says so when it can't read the history, instead of "No updates applied yet".
-- Headless runs warn when `settings.json` is locked, as they already did when access was denied,
-  instead of quietly using the defaults.
 
 ## [2.1.0] - 2026-10-02
 
