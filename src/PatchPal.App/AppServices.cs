@@ -45,6 +45,4 @@ public static class AppServices
             return new AppSettings();
         }
     }
-
-    public static void SaveSettings() => SettingsStore.Save(Settings);
 }

@@ -52,6 +52,37 @@ public class SettingsViewModelTests : IDisposable
     }
 
     [Fact]
+    public void ChangingASetting_KeepsTheRestOfTheFile_EvenWhenStartupFellBackToDefaults()
+    {
+        // When settings.json couldn't be read at startup the page starts from the defaults;
+        // saving those would replace every other setting in the file with its default.
+        var store = new SettingsStore(_dir.FullName);
+        store.Save(new AppSettings { DisabledSources = ["scoop"] });
+        var vm = new SettingsViewModel(store, new AppSettings(), _ => true, _ => { });
+
+        vm.ScanOnLaunch = false;
+
+        var saved = store.Load();
+        Assert.False(saved.ScanOnLaunch);
+        Assert.Equal(["scoop"], saved.DisabledSources);
+    }
+
+    [Fact]
+    public void ChangingASetting_WhenTheFileCannotBeRead_LeavesTheFileAlone()
+    {
+        var store = new SettingsStore(_dir.FullName);
+        store.Save(new AppSettings { DisabledSources = ["scoop"] });
+        var vm = new SettingsViewModel(store, store.Load(), _ => true, _ => { });
+
+        using (new FileStream(Path.Combine(_dir.FullName, "settings.json"), FileMode.Open, FileAccess.Read, FileShare.Write))
+            vm.ScanOnLaunch = false;                              // must neither throw nor save
+
+        var saved = store.Load();
+        Assert.True(saved.ScanOnLaunch);
+        Assert.Equal(["scoop"], saved.DisabledSources);
+    }
+
+    [Fact]
     public void ScanOnLaunchAndSystemComponents_Persist()
     {
         var store = new SettingsStore(_dir.FullName);

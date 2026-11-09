@@ -20,4 +20,16 @@ public sealed class SettingsStore(string? directory = null)
     }
 
     public void Save(AppSettings settings) => JsonFileStore.Save(_path, settings);
+
+    /// <summary>
+    /// Applies <paramref name="change"/> to the settings the file holds now and saves the result,
+    /// so every other setting stays as it is. Throws, without saving, when the file exists but
+    /// can't be read.
+    /// </summary>
+    public AppSettings Update(Func<AppSettings, AppSettings> change)
+    {
+        var updated = change(Load());
+        Save(updated);
+        return updated;
+    }
 }
