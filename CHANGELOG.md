@@ -23,6 +23,10 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **Fewer phantom updates.** A version written with fewer parts no longer counts as older
   than the same version written with more (8.6 vs 8.6.0). Whole-number versions such as 121
   are now compared, instead of always counting as an update.
+- An app whose name begins like another app's no longer takes that app's update. Microsoft
+  Edge WebView2 Runtime used to take over Microsoft Edge's row and push Edge off the list.
+  When two registry entries share one update, both now stay on All apps and in exports; the
+  extra one is marked "Duplicate entry" instead of disappearing.
 - Switching every package source off in Settings now does that. It used to ask every package
   manager anyway. The Updates page and headless runs now say the sources are switched off,
   instead of "no package manager detected".

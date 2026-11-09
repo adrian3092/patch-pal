@@ -22,8 +22,9 @@ public class NameNormalizerTests
     public void GetMatchBase_EmptyInputYieldsEmpty(string? name)
         => Assert.Equal("", NameNormalizer.GetMatchBase(name));
 
+    // The real "Microsoft Edge WebView2 Runtime" has a space after "Edge"; ReportMergerTests covers it.
     [Fact]
-    public void IsBasePrefixMatch_RejectsEdgeVsEdgeWebView2()
+    public void IsBasePrefixMatch_RejectsAPrefixThatEndsMidWord()
         => Assert.False(NameNormalizer.IsBasePrefixMatch("microsoft edge", "microsoft edgewebview2 runtime"));
 
     [Fact]
