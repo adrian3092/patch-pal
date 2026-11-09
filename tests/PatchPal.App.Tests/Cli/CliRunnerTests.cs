@@ -38,4 +38,29 @@ public class CliRunnerTests
         Assert.Equal(0, code);                                   // the report still runs
         Assert.Contains("couldn't read settings", error.ToString());
     }
+
+    [Fact]
+    public async Task Headless_LockedSettingsFile_WarnsAndUsesDefaults()
+    {
+        // A locked settings.json used to read as defaults without a word.
+        var dir = Directory.CreateTempSubdirectory();
+        try
+        {
+            var store = new SettingsStore(dir.FullName);
+            store.Save(new AppSettings());
+            var service = new ScanService(new FakePrograms(), [new WingetSource(new FakeRunner())]);
+            var error = new StringWriter();
+
+            int code;
+            using (new FileStream(Path.Combine(dir.FullName, "settings.json"), FileMode.Open, FileAccess.Read, FileShare.Write))
+                code = await CliRunner.RunAsync(CliOptions.Parse(["--no-gui"]), service, store.Load, new StringWriter(), error);
+
+            Assert.Equal(0, code);
+            Assert.Contains("couldn't read settings", error.ToString());
+        }
+        finally
+        {
+            dir.Delete(recursive: true);
+        }
+    }
 }

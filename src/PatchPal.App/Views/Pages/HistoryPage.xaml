@@ -91,7 +91,8 @@
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                         Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
                 <ui:SymbolIcon Symbol="History48" FontSize="48" Opacity="0.5" HorizontalAlignment="Center" />
-                <TextBlock Text="No updates applied yet" FontSize="16" Margin="0,10,0,0" Opacity="0.7" />
+                <TextBlock Text="{Binding EmptyText}" FontSize="16" Margin="0,10,0,0" Opacity="0.7"
+                           MaxWidth="520" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
         </Grid>
     </Grid>

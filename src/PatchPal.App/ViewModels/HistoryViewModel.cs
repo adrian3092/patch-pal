@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PatchPal.Core.History;
@@ -20,13 +21,32 @@ public sealed partial class HistoryViewModel(HistoryStore store) : ObservableObj
 
     public ObservableCollection<HistoryGroup> Groups { get; } = [];
 
+    private const string NothingAppliedText = "No updates applied yet";
+
     [ObservableProperty]
     private bool _isEmpty = true;
+
+    /// <summary>What the page says when it lists nothing: none applied yet, or why the list couldn't be read.</summary>
+    [ObservableProperty]
+    private string _emptyText = NothingAppliedText;
 
     public void Refresh()
     {
         Groups.Clear();
-        foreach (var group in store.Load()
+        IReadOnlyList<HistoryEntry> entries;
+        try
+        {
+            entries = store.Load();
+            EmptyText = NothingAppliedText;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // There may well be entries; another program just has the file right now.
+            entries = [];
+            EmptyText = $"Couldn't read the update history: {ex.Message}";
+        }
+
+        foreach (var group in entries
                      .OrderByDescending(e => e.Timestamp)
                      .GroupBy(e => DateOnly.FromDateTime(e.Timestamp.LocalDateTime)))
         {
