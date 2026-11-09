@@ -14,6 +14,22 @@ public class VersionLogicTests
         => Assert.Equal(expected, VersionLogic.IsNewerVersion(current, available));
 
     [Theory]
+    [InlineData("8.6", "8.6.0", false)]                    // the same version, written with fewer parts
+    [InlineData("5.17", "5.17.0.0", false)]
+    [InlineData("8.6.0", "8.6", false)]
+    [InlineData("8.6", "8.6.1", true)]
+    public void IsNewerVersion_TreatsMissingPartsAsZero(string current, string available, bool expected)
+        => Assert.Equal(expected, VersionLogic.IsNewerVersion(current, available));
+
+    [Theory]
+    [InlineData("121", "121", false)]                      // whole numbers, with no dot to anchor on
+    [InlineData("121", "122", true)]
+    [InlineData("122", "121", false)]
+    [InlineData("2024", "2024.05.28", true)]
+    public void IsNewerVersion_ComparesWholeNumberVersions(string current, string available, bool expected)
+        => Assert.Equal(expected, VersionLogic.IsNewerVersion(current, available));
+
+    [Theory]
     [InlineData("", "1.2.3")]          // unparseable current -> assume update
     [InlineData("abc", "1.2.3")]
     [InlineData("1.2.3", "unknown")]   // unparseable available -> assume update
@@ -25,6 +41,7 @@ public class VersionLogicTests
     [InlineData("> 8.0.422", true)]     // winget marks out-of-range installs with < or >
     [InlineData("Unknown", false)]      // `winget upgrade --include-unknown`
     [InlineData("", false)]
+    [InlineData("121", true)]           // a whole number is a version too
     public void IsParsable_DetectsAUsableVersion(string text, bool expected)
         => Assert.Equal(expected, VersionLogic.IsParsable(text));
 

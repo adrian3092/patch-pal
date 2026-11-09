@@ -7,10 +7,10 @@ public static partial class VersionLogic
 {
     /// <summary>Parse a version-ish string, or 0.0 when it can't be parsed.</summary>
     public static Version GetVersionValue(string? text)
-        => Version.TryParse(Clean(text), out var v) ? v : new Version(0, 0);
+        => TryParse(text, out var v) ? v : new Version(0, 0);
 
     /// <summary>True when the text holds a comparable version (winget prints "Unknown" otherwise).</summary>
-    public static bool IsParsable(string? text) => Version.TryParse(Clean(text), out _);
+    public static bool IsParsable(string? text) => TryParse(text, out _);
 
     /// <summary>
     /// True when <paramref name="available"/> is strictly newer than <paramref name="current"/>.
@@ -20,21 +20,36 @@ public static partial class VersionLogic
     /// </summary>
     public static bool IsNewerVersion(string? current, string? available)
     {
-        if (Version.TryParse(Clean(current), out var c) && Version.TryParse(Clean(available), out var a))
+        if (TryParse(current, out var c) && TryParse(available, out var a))
             return a > c || (a == c && IsBelow(current));
         return true;
     }
 
     private static bool IsBelow(string? version) => version?.TrimStart().StartsWith('<') == true;
 
+    // System.Version counts a missing part as -1, which ranks "8.6" below "8.6.0"; fill missing
+    // parts in with 0 so versions written with fewer parts compare equal. A whole number such as
+    // "121" has no dot for System.Version to parse, so it reads as 121.0.
+    private static bool TryParse(string? text, out Version version)
+    {
+        var token = Clean(text);
+        if (token.Length > 0 && !token.Contains('.')) token += ".0";
+        if (Version.TryParse(token, out var parsed))
+        {
+            version = new Version(parsed.Major, parsed.Minor, Math.Max(parsed.Build, 0), Math.Max(parsed.Revision, 0));
+            return true;
+        }
+        version = new Version(0, 0);
+        return false;
+    }
+
     private static string Clean(string? text)
     {
         // Deviation from v1: v1 stripped non-version chars globally, so "8.0.8 (x64)"
         // became "8.0.864" and hid real updates. Instead, replace non-version chars with
-        // spaces and take the first dotted token.
-        var replaced = NonVersionChars().Replace(text ?? "", " ");
-        var token = replaced.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                             .FirstOrDefault(t => t.Contains('.')) ?? "";
+        // spaces and take the first dotted token, or failing that the first number.
+        var tokens = NonVersionChars().Replace(text ?? "", " ").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var token = tokens.FirstOrDefault(t => t.Contains('.')) ?? tokens.FirstOrDefault() ?? "";
         return token.Trim('.');
     }
 
