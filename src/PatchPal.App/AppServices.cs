@@ -1,5 +1,6 @@
 using System.IO;
 using PatchPal.Core.History;
+using PatchPal.Core.Persistence;
 using PatchPal.Core.Scanning;
 using PatchPal.Core.Settings;
 using PatchPal.Core.Sources;
@@ -40,6 +41,7 @@ public static class AppServices
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            ErrorLog.Write(ex, "Couldn't read settings.json; using the defaults");
             return new AppSettings();
         }
     }

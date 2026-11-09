@@ -8,8 +8,9 @@ public sealed record BatchItem(string Source, string PackageId, string Name, str
 /// <summary>
 /// Runs a batch of upgrades: sequential within each source (a package manager cannot
 /// run concurrently with itself), parallel across sources. Every attempt — success or
-/// failure — is appended to History, and a failure never blocks the rest of the batch.
-/// Callbacks fire on worker threads; UI callers must marshal to the dispatcher.
+/// failure — is appended to History, and a failure never blocks the rest of the batch,
+/// not even a failure to write History: that result carries the reason instead.
+/// Callbacks may fire on worker threads; UI callers must marshal to the dispatcher.
 /// </summary>
 public sealed class BatchUpgradeRunner(UpgradeRunner runner, HistoryStore history)
 {
@@ -28,15 +29,28 @@ public sealed class BatchUpgradeRunner(UpgradeRunner runner, HistoryStore histor
             {
                 ct.ThrowIfCancellationRequested();
                 onItemStarted?.Invoke(item);
-                var result = await runner.UpgradeAsync(item.Source, item.PackageId, item.Name, ct);
-                history.Append(new HistoryEntry(
-                    DateTimeOffset.Now, item.Name, item.PackageId, item.Source,
-                    item.FromVersion, item.ToVersion, result.Success, result.Message, result.Log));
+                var result = Record(item, await runner.UpgradeAsync(item.Source, item.PackageId, item.Name, ct));
                 lock (gate) results.Add(result);
                 onItemFinished?.Invoke(item, result);
             }
         }));
 
         return results;
+    }
+
+    // The upgrade has already run by now, so failing to log it must not stop the batch.
+    private UpgradeResult Record(BatchItem item, UpgradeResult result)
+    {
+        try
+        {
+            history.Append(new HistoryEntry(
+                DateTimeOffset.Now, item.Name, item.PackageId, item.Source,
+                item.FromVersion, item.ToVersion, result.Success, result.Message, result.Log));
+            return result;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return result with { HistoryError = ex.Message };
+        }
     }
 }

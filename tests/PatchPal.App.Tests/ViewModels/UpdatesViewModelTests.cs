@@ -79,6 +79,47 @@ public class UpdatesViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateAll_HistoryCannotBeSaved_FinishesAndSaysSo()
+    {
+        // The update itself worked; only its History entry couldn't be written. That used to
+        // end the batch with an exception the app didn't handle.
+        var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
+        var sources = new IPackageSource[] { new ChocoSource(runner) };
+        var notAFolder = Path.Combine(_dir.FullName, "not-a-folder");
+        File.WriteAllText(notAFolder, "");
+        var vm = new UpdatesViewModel(
+            new ScanService(new FakePrograms(new InstalledProgram("7zip", "23.01", "Igor Pavlov")), sources),
+            new BatchUpgradeRunner(new UpgradeRunner(sources), new HistoryStore(Path.Combine(notAFolder, "PatchPal"))),
+            new ScanState(), new AppSettings());
+        BatchSummary? summary = null;
+        vm.BatchCompleted += s => summary = s;
+        await vm.ScanAsync();
+
+        await vm.UpdateAllAsync();
+
+        Assert.Equal(RowState.Succeeded, vm.Rows[0].State);
+        Assert.False(vm.IsUpdating);
+        Assert.NotNull(summary);
+        Assert.Equal(1, summary.Succeeded);
+        Assert.NotNull(summary.HistoryError);
+    }
+
+    [Fact]
+    public async Task UpdateOne_WhenTheBatchStopsEarly_DoesNotLeaveTheRowSpinning()
+    {
+        var (vm, runner) = Setup();
+        await vm.ScanAsync();
+        runner.UpgradeGate = new TaskCompletionSource();
+        runner.UpgradeGate.SetCanceled();                        // the batch ends before this update reports back
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => vm.UpdateOneAsync(vm.Rows[0]));
+
+        Assert.Equal(RowState.Failed, vm.Rows[0].State);
+        Assert.NotEmpty(vm.Rows[0].StateMessage);
+        Assert.False(vm.IsUpdating);
+    }
+
+    [Fact]
     public async Task UpdateSelected_DoesNothingWhenNothingSelected()
     {
         var (vm, runner) = Setup();
