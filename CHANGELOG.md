@@ -20,6 +20,8 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   winget's own catalog (`--source winget`), so every update listed under `msstore`, or under
   a source you added yourself, failed with "No installed package matched for upgrade". Each
   update now comes from the source winget listed it under.
+- **"Launch Patch Pal" at the end of setup works.** It failed with "CreateProcess failed;
+  code 740" because Patch Pal needs administrator rights; it now shows the usual UAC prompt.
 - Other unexpected errors are written to `%APPDATA%\PatchPal\error.log` and shown in a
   message, and Patch Pal stays open instead of disappearing.
 - The History page says so when it can't read the history, instead of "No updates applied yet".

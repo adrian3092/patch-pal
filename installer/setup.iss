@@ -79,4 +79,6 @@ Name: "{autoprograms}\Uninstall {#MyAppName}";  Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}";             Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+; Patch Pal asks for administrator rights, which only ShellExecute can prompt for: a plain
+; CreateProcess of it fails with error 740 ("The requested operation requires elevation").
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent shellexec
