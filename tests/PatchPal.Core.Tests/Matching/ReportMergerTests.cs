@@ -132,6 +132,50 @@ public class ReportMergerTests
         Assert.Equal("scoop", extra.PackageSource);
     }
 
+    [Theory]
+    [InlineData("Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.30.30708")]   // winget names the leftover
+    [InlineData("Microsoft Visual C++ 2015-2022 Redistributable (…")]                   // older winget cut names short
+    public void LeftoverEntry_IsNotAnUpdate_WhenItsProductIsAlreadyCurrent(string wingetName)
+    {
+        // An old redistributable left its registry entry behind and winget keyed the update off it,
+        // but the same product's current entry already has the available version.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.30.30708", "14.30.30708.0", "Microsoft Corporation"),
+             new InstalledProgram("Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.51.36231", "14.51.36231.0", "Microsoft Corporation")],
+            [new UpgradeCandidate(wingetName, "Microsoft.VCRedist.2015+.x64", "14.30.30708.0", "14.51.36231.0", "winget")],
+            ["winget"]);
+
+        Assert.Equal(2, rows.Count);
+        Assert.DoesNotContain(rows, r => r.IsUpdate);
+    }
+
+    [Fact]
+    public void ProductNumberedDifferentlyInTheRegistry_KeepsItsUpdate()
+    {
+        // Like the .NET SDK (registry 8.4.2226 for package 8.0.422), this product's registry
+        // versions aren't package versions, so a sibling's registry number proves nothing.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Contoso Tool 1.2", "7.0.100", "Contoso"),
+             new InstalledProgram("Contoso Tool 1.3", "7.0.200", "Contoso")],
+            [new UpgradeCandidate("Contoso Tool 1.2", "Contoso.Tool", "1.2", "1.4", "winget")],
+            ["winget"]);
+
+        Assert.Equal("Contoso Tool 1.2", Assert.Single(rows, r => r.IsUpdate).Name);
+    }
+
+    [Fact]
+    public void SeparateCopyOfAnApp_KeepsItsOwnUpdate()
+    {
+        // A current machine-wide copy says nothing about a per-user copy, whose update stays.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Microsoft Visual Studio Code", "1.95.0", "Microsoft Corporation"),
+             new InstalledProgram("Microsoft Visual Studio Code (User)", "1.80.0", "Microsoft Corporation")],
+            [new UpgradeCandidate("Microsoft Visual Studio Code (User)", "Microsoft.VisualStudioCode", "1.80.0", "1.95.0", "winget")],
+            ["winget"]);
+
+        Assert.Equal("Microsoft Visual Studio Code (User)", Assert.Single(rows, r => r.IsUpdate).Name);
+    }
+
     [Fact]
     public void ProgramNamedLikeAnother_DoesNotTakeItsUpdate()
     {

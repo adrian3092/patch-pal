@@ -22,7 +22,9 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   update now comes from the source winget listed it under.
 - **Fewer phantom updates.** A version written with fewer parts no longer counts as older
   than the same version written with more (8.6 vs 8.6.0). Whole-number versions such as 121
-  are now compared, instead of always counting as an update.
+  are now compared, instead of always counting as an update. An old installer's leftover
+  registry entry no longer shows an update once the same product's current entry already
+  has it, as happened with the Visual C++ redistributables.
 - An app whose name begins like another app's no longer takes that app's update. Microsoft
   Edge WebView2 Runtime used to take over Microsoft Edge's row and push Edge off the list.
   When two registry entries share one update, both now stay on All apps and in exports; the

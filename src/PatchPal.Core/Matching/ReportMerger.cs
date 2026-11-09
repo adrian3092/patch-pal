@@ -39,7 +39,8 @@ public static class ReportMerger
                 // what's installed. This stops phantom "updates" where winget keys off an
                 // older wrapper entry than the runtime you already have.
                 var installed = InstalledVersion(prog, match, isExact);
-                var isNewer = VersionLogic.IsNewerVersion(installed, match.Available);
+                var isNewer = VersionLogic.IsNewerVersion(installed, match.Available)
+                              && !HasCurrentSibling(prog, match.Available, programs);
                 rows.Add(new ReportRow(
                     Name: prog.Name,
                     Publisher: prog.Publisher,
@@ -83,6 +84,25 @@ public static class ReportMerger
         => (isExact && match.PackageSource == "winget" && VersionLogic.IsParsable(match.Current))
             ? match.Current
             : prog.Version;
+
+    /// <summary>
+    /// True when another registry entry for the same product (the same name but for a version on
+    /// the end, as in "... (x64) - 14.51.36231") already has <paramref name="available"/>. An old
+    /// installer left <paramref name="prog"/>'s entry behind, and winget can key the update off
+    /// that leftover, though the product is current. Registry versions only count when the
+    /// registry numbers the product as the package does, which the leftover's own version shows:
+    /// it must be older than the update too (the .NET SDK, for one, numbers them differently).
+    /// </summary>
+    private static bool HasCurrentSibling(InstalledProgram prog, string available, IReadOnlyList<InstalledProgram> programs)
+    {
+        var product = NameNormalizer.GetMatchBase(prog.Name);
+        return product.Length > 0
+            && VersionLogic.IsNewerVersion(prog.Version, available)
+            && programs.Any(other =>
+                !ReferenceEquals(other, prog)
+                && NameNormalizer.GetMatchBase(other.Name) == product
+                && !VersionLogic.IsNewerVersion(other.Version, available));
+    }
 
     private static (UpgradeCandidate? Match, bool IsExact) FindMatch(
         InstalledProgram prog, IReadOnlyList<UpgradeCandidate> upgrades, IReadOnlyList<UpgradeCandidate> openToFuzzyMatch)
