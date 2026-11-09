@@ -5,20 +5,27 @@ using PatchPal.Core.Sources;
 
 namespace PatchPal.Core.Scanning;
 
-public sealed record ScanOptions(IReadOnlyList<string> Sources, bool IncludeSystemComponents)
+/// <summary>
+/// What a scan covers. <paramref name="Sources"/> names the package managers to ask: null asks
+/// every one that is installed, and an empty list asks none (the user switched them all off).
+/// </summary>
+public sealed record ScanOptions(IReadOnlyList<string>? Sources, bool IncludeSystemComponents)
 {
     /// <summary>All detected sources, no system components.</summary>
-    public static ScanOptions Default { get; } = new([], false);
+    public static ScanOptions Default { get; } = new(null, false);
 
     private static readonly string[] AllSources = ["winget", "scoop", "chocolatey"];
 
+    /// <summary>True when every source is switched off, so no package manager is asked.</summary>
+    public bool AllSourcesOff => Sources is { Count: 0 };
+
     /// <summary>
     /// The scan the Settings page describes: every source the user hasn't switched off, plus their
-    /// system-components choice. An empty source list means every detected source.
+    /// system-components choice.
     /// </summary>
     public static ScanOptions FromSettings(AppSettings settings)
         => new(settings.DisabledSources.Count == 0
-                   ? []
+                   ? null
                    : AllSources.Except(settings.DisabledSources, StringComparer.OrdinalIgnoreCase).ToList(),
                settings.IncludeSystemComponents);
 }
@@ -41,7 +48,7 @@ public sealed class ScanService(IInstalledProgramProvider programProvider, IEnum
     public async Task<ScanResult> ScanAsync(ScanOptions options, CancellationToken ct = default)
     {
         var enabled = _sources
-            .Where(s => options.Sources.Count == 0
+            .Where(s => options.Sources is null
                 || options.Sources.Contains(s.Name, StringComparer.OrdinalIgnoreCase))
             .Where(s => s.IsInstalled())
             .ToList();

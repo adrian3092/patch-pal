@@ -27,6 +27,21 @@ public class CliRunnerTests
     }
 
     [Fact]
+    public async Task Headless_EverySourceSwitchedOff_AsksNoneAndSaysSo()
+    {
+        var winget = new FakeRunner();
+        var service = new ScanService(new FakePrograms(), [new WingetSource(winget)]);
+        var error = new StringWriter();
+
+        var code = await CliRunner.RunAsync(CliOptions.Parse(["--no-gui"]), service,
+            () => new AppSettings { DisabledSources = ["winget", "scoop", "chocolatey"] }, new StringWriter(), error);
+
+        Assert.Equal(0, code);
+        Assert.Empty(winget.Calls);
+        Assert.Contains("switched off", error.ToString());
+    }
+
+    [Fact]
     public async Task Headless_SettingsItCannotRead_WarnsAndUsesDefaults()
     {
         var service = new ScanService(new FakePrograms(), [new WingetSource(new FakeRunner())]);

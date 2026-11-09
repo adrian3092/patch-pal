@@ -47,11 +47,14 @@ public static class CliRunner
         try
         {
             output.WriteLine("Scanning installed programs and querying package managers...");
-            var result = await service.ScanAsync(options.ToScanOptions(LoadSettings(loadSettings, error)));
+            var scanOptions = options.ToScanOptions(LoadSettings(loadSettings, error));
+            var result = await service.ScanAsync(scanOptions);
 
             foreach (var warning in result.Warnings)
                 error.WriteLine($"warning: {warning}");
-            if (result.EnabledSources.Count == 0)
+            if (scanOptions.AllSourcesOff)
+                error.WriteLine("warning: every package source is switched off in Settings, so updates were not checked.");
+            else if (result.EnabledSources.Count == 0)
                 error.WriteLine("warning: no supported package manager found (winget, scoop, chocolatey).");
 
             if (options.ExportCsv is not null)

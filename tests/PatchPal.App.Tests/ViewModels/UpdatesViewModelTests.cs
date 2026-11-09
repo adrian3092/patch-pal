@@ -352,6 +352,21 @@ public class UpdatesViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Scan_EverySourceSwitchedOff_AsksNoneAndSaysSo()
+    {
+        var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
+        var choco = new ChocoSource(runner);
+        var vm = new UpdatesViewModel(new ScanService(new FakePrograms(), [choco]),
+            new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
+            new ScanState(), new AppSettings { DisabledSources = ["winget", "scoop", "chocolatey"] });
+
+        await vm.ScanAsync();
+
+        Assert.Empty(runner.Calls);
+        Assert.Contains("switched off", Assert.Single(vm.Warnings));   // not "no package manager detected"
+    }
+
+    [Fact]
     public async Task UpdateAll_IsEnabled_AfterAScanFindsUpdates()
     {
         var (vm, _) = SetupWithEdge();

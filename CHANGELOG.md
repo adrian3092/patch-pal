@@ -23,6 +23,9 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **Fewer phantom updates.** A version written with fewer parts no longer counts as older
   than the same version written with more (8.6 vs 8.6.0). Whole-number versions such as 121
   are now compared, instead of always counting as an update.
+- Switching every package source off in Settings now does that. It used to ask every package
+  manager anyway. The Updates page and headless runs now say the sources are switched off,
+  instead of "no package manager detected".
 - **"Launch Patch Pal" at the end of setup works.** It failed with "CreateProcess failed;
   code 740" because Patch Pal needs administrator rights; it now shows the usual UAC prompt.
 - Other unexpected errors are written to `%APPDATA%\PatchPal\error.log` and shown in a
