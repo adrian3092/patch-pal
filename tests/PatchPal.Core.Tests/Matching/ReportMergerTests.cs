@@ -150,6 +150,32 @@ public class ReportMergerTests
     }
 
     [Fact]
+    public void ParallelReleaseLine_KeepsTheOlderLinesUpdate()
+    {
+        // Two release lines installed side by side: the 3.12 copy says nothing about 3.11's fix.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Contoso Runtime 3.11.5", "3.11.5", "Contoso"),
+             new InstalledProgram("Contoso Runtime 3.12.1", "3.12.1", "Contoso")],
+            [new UpgradeCandidate("Contoso Runtime 3.11.5", "Contoso.Runtime.3.11", "3.11.5", "3.11.9", "winget")],
+            ["winget"]);
+
+        Assert.Equal("Contoso Runtime 3.11.5", Assert.Single(rows, r => r.IsUpdate).Name);
+    }
+
+    [Fact]
+    public void LeftoverEntry_IsNotAnUpdate_WhenTheCurrentEntryHasANewerBuild()
+    {
+        // A servicing build of the same release (14.51.36300) also has the update.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.30.30708", "14.30.30708.0", "Microsoft Corporation"),
+             new InstalledProgram("Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.51.36300", "14.51.36300.0", "Microsoft Corporation")],
+            [new UpgradeCandidate("Microsoft Visual C++ 2015-2022 Redistributable (x64) - 14.30.30708", "Microsoft.VCRedist.2015+.x64", "14.30.30708.0", "14.51.36231.0", "winget")],
+            ["winget"]);
+
+        Assert.DoesNotContain(rows, r => r.IsUpdate);
+    }
+
+    [Fact]
     public void ProductNumberedDifferentlyInTheRegistry_KeepsItsUpdate()
     {
         // Like the .NET SDK (registry 8.4.2226 for package 8.0.422), this product's registry

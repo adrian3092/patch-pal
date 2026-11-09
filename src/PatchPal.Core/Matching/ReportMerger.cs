@@ -101,7 +101,17 @@ public static class ReportMerger
             && programs.Any(other =>
                 !ReferenceEquals(other, prog)
                 && NameNormalizer.GetMatchBase(other.Name) == product
-                && !VersionLogic.IsNewerVersion(other.Version, available));
+                && HasReleaseOf(other.Version, available));
+    }
+
+    // At or past the update within its release line (same major.minor): 14.51.36300 has
+    // 14.51.36231, but a 3.12.1 install beside a 3.11 update is a release line of its own.
+    private static bool HasReleaseOf(string installed, string available)
+    {
+        if (!VersionLogic.IsParsable(installed) || !VersionLogic.IsParsable(available)) return false;
+        var have = VersionLogic.GetVersionValue(installed);
+        var want = VersionLogic.GetVersionValue(available);
+        return have.Major == want.Major && have.Minor == want.Minor && have >= want;
     }
 
     private static (UpgradeCandidate? Match, bool IsExact) FindMatch(
