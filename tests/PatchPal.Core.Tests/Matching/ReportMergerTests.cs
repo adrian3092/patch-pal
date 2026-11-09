@@ -133,6 +133,30 @@ public class ReportMergerTests
     }
 
     [Fact]
+    public void ProgramNamedLikeAnother_DoesNotTakeItsUpdate()
+    {
+        // "Microsoft Edge WebView2 Runtime" begins with "Microsoft Edge", but winget names Edge's
+        // update after Edge. WebView2 used to take the update row and push Edge off the list.
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("Microsoft Edge", "154.0.4258.37", "Microsoft Corporation"),
+             new InstalledProgram("Microsoft Edge WebView2 Runtime", "154.0.4258.40", "Microsoft Corporation")],
+            [new UpgradeCandidate("Microsoft Edge", "Microsoft.Edge", "154.0.4258.37", "154.0.4258.48", "winget")],
+            ["winget"]);
+
+        Assert.Equal("Microsoft Edge", Assert.Single(rows, r => r.IsUpdate).Name);
+        Assert.False(Assert.Single(rows, r => r.Name == "Microsoft Edge WebView2 Runtime").IsUpdate);
+    }
+
+    [Fact]
+    public void EveryInstalledProgram_IsListed_EvenWhenTwoShareAnUpdate()
+    {
+        // The two x64 redistributable entries make one update row, but All apps and the exports
+        // still list both programs.
+        var names = MergedRows().Select(r => r.Name).ToList();
+        Assert.All(Programs, p => Assert.Contains(p.Name, names));
+    }
+
+    [Fact]
     public void UpdateRows_KeepTheSourceTheUpdateCameFrom()
     {
         var rows = ReportMerger.Merge(

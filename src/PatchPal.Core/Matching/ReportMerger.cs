@@ -6,10 +6,15 @@ namespace PatchPal.Core.Matching;
 /// <summary>
 /// Merges registry-installed programs with package-manager upgrade candidates,
 /// ported from v1 Merge-ProgramsAndUpgrades / Resolve-DuplicatePackageRows.
-/// Match order: exact name -> normalized base prefix -> word-boundary containment.
+/// Match order: exact name -> normalized base prefix -> word-boundary containment. An update
+/// that winget names after an installed program belongs to that program, so the fuzzy passes
+/// only consider the others.
 /// </summary>
 public static class ReportMerger
 {
+    /// <summary>Status of an installed entry whose package's update is listed on another entry's row.</summary>
+    public const string DuplicateEntryStatus = "Duplicate entry";
+
     public static IReadOnlyList<ReportRow> Merge(
         IReadOnlyList<InstalledProgram> programs,
         IReadOnlyList<UpgradeCandidate> upgrades,
@@ -18,9 +23,15 @@ public static class ReportMerger
         var rows = new List<ReportRow>();
         var matchedKeys = new HashSet<string>();
 
+        // "Microsoft Edge WebView2 Runtime" begins with "Microsoft Edge", but an update winget
+        // names "Microsoft Edge" is Edge's, so a program with another name can't take it.
+        var openToFuzzyMatch = upgrades
+            .Where(up => !string.IsNullOrEmpty(up.Name) && !programs.Any(p => SameName(p.Name, up.Name)))
+            .ToList();
+
         foreach (var prog in programs)
         {
-            var (match, isExact) = FindMatch(prog, upgrades);
+            var (match, isExact) = FindMatch(prog, upgrades, openToFuzzyMatch);
             if (match is not null)
             {
                 matchedKeys.Add($"{match.PackageSource}|{match.Id}");
@@ -74,10 +85,10 @@ public static class ReportMerger
             : prog.Version;
 
     private static (UpgradeCandidate? Match, bool IsExact) FindMatch(
-        InstalledProgram prog, IReadOnlyList<UpgradeCandidate> upgrades)
+        InstalledProgram prog, IReadOnlyList<UpgradeCandidate> upgrades, IReadOnlyList<UpgradeCandidate> openToFuzzyMatch)
     {
         foreach (var up in upgrades)
-            if (string.Equals(up.Name, prog.Name, StringComparison.OrdinalIgnoreCase))
+            if (SameName(up.Name, prog.Name))
                 return (up, true);
 
         // Guard fuzzy passes against empty names — mirrors v1 PowerShell truthiness check.
@@ -85,17 +96,15 @@ public static class ReportMerger
         if (string.IsNullOrEmpty(prog.Name)) return (null, false);
 
         var progBase = NameNormalizer.GetMatchBase(prog.Name);
-        foreach (var up in upgrades)
+        foreach (var up in openToFuzzyMatch)
         {
-            if (string.IsNullOrEmpty(up.Name)) continue;
             if (NameNormalizer.IsBasePrefixMatch(progBase, NameNormalizer.GetMatchBase(up.Name)))
                 return (up, false);
         }
 
         var progLower = prog.Name.ToLowerInvariant();
-        foreach (var up in upgrades)
+        foreach (var up in openToFuzzyMatch)
         {
-            if (string.IsNullOrEmpty(up.Name)) continue;
             var upLower = up.Name.ToLowerInvariant();
             if (Regex.IsMatch(progLower, $@"\b{Regex.Escape(upLower)}\b")
                 || Regex.IsMatch(upLower, $@"\b{Regex.Escape(progLower)}\b"))
@@ -107,32 +116,30 @@ public static class ReportMerger
     /// <summary>
     /// Collapse multiple installed entries that map to the same package id into a single
     /// "Update available" row (keeping the highest installed version), so stale leftover
-    /// registry entries don't show as separate phantom updates.
+    /// registry entries don't show as separate phantom updates. The other entries stay listed
+    /// as duplicates, so All apps and the exports still show every installed program.
     /// </summary>
     private static List<ReportRow> ResolveDuplicatePackageRows(List<ReportRow> rows)
     {
         var kept = new Dictionary<string, ReportRow>();
-        var result = new List<ReportRow>();
-        foreach (var r in rows)
+        foreach (var r in rows.Where(IsPackageUpdate))
         {
-            if (!r.IsUpdate || string.IsNullOrWhiteSpace(r.PackageId))
-            {
-                result.Add(r);
-                continue;
-            }
-            var key = $"{r.PackageSource}|{r.PackageId}";
-            if (!kept.TryGetValue(key, out var existing))
-            {
+            var key = PackageKey(r);
+            if (!kept.TryGetValue(key, out var existing)
+                || VersionLogic.GetVersionValue(r.Current) > VersionLogic.GetVersionValue(existing.Current))
                 kept[key] = r;
-                result.Add(r);
-            }
-            else if (VersionLogic.GetVersionValue(r.Current) > VersionLogic.GetVersionValue(existing.Current))
-            {
-                result.Remove(existing);
-                result.Add(r);
-                kept[key] = r;
-            }
         }
-        return result;
+
+        return rows
+            .Select(r => IsPackageUpdate(r) && !ReferenceEquals(kept[PackageKey(r)], r)
+                ? r with { Available = "", Status = DuplicateEntryStatus, PackageId = "", PackageSource = "", Repository = null }
+                : r)
+            .ToList();
     }
+
+    private static bool IsPackageUpdate(ReportRow row) => row.IsUpdate && !string.IsNullOrWhiteSpace(row.PackageId);
+
+    private static string PackageKey(ReportRow row) => $"{row.PackageSource}|{row.PackageId}";
+
+    private static bool SameName(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 }
