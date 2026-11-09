@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
+using PatchPal.Core.Persistence;
 using PatchPal.Core.Settings;
 
 namespace PatchPal.App.ViewModels;
@@ -24,22 +26,26 @@ public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly SettingsStore _store;
     private readonly Action<ThemePreference> _applyTheme;
+    private readonly Action<Exception, string> _logError;
     private AppSettings _settings;
     private bool _initializing = true;
 
     public SettingsViewModel() : this(
         AppServices.SettingsStore, AppServices.Settings,
         name => AppServices.Sources.First(s => s.Name == name).IsInstalled(),
-        ThemeApplier.Apply)
+        ThemeApplier.Apply,
+        (error, context) => ErrorLog.Write(error, context))
     {
     }
 
     public SettingsViewModel(SettingsStore store, AppSettings settings,
-        Func<string, bool> sourceInstalled, Action<ThemePreference> applyTheme)
+        Func<string, bool> sourceInstalled, Action<ThemePreference> applyTheme,
+        Action<Exception, string>? logError = null)
     {
         _store = store;
         _settings = settings;
         _applyTheme = applyTheme;
+        _logError = logError ?? ((_, _) => { });
 
         SelectedTheme = settings.Theme;
         ScanOnLaunch = settings.ScanOnLaunch;
@@ -93,8 +99,18 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     private void Persist(Func<AppSettings, AppSettings> update)
     {
-        _settings = update(_settings);
-        _store.Save(_settings);
+        try
+        {
+            // Change what the file holds now, not the copy read at startup: that copy is the
+            // defaults when settings.json couldn't be read then, and saving it would reset the rest.
+            _settings = _store.Update(update);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Keep the change for this session without saving over a file that can't be read now.
+            _settings = update(_settings);
+            _logError(ex, "Couldn't save settings.json; the change lasts until Patch Pal closes");
+        }
         AppServices.Settings = _settings;                        // keep the shared instance fresh
     }
 }

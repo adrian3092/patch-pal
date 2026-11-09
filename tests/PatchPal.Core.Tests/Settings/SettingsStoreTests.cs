@@ -46,6 +46,34 @@ public class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Update_ChangesOneSettingAndKeepsTheRestOfTheFile()
+    {
+        var store = Store();
+        store.Save(new AppSettings { DisabledSources = ["scoop"] });
+
+        var updated = store.Update(s => s with { Theme = ThemePreference.Dark });
+
+        Assert.Equal(["scoop"], updated.DisabledSources);
+        var saved = store.Load();
+        Assert.Equal(ThemePreference.Dark, saved.Theme);
+        Assert.Equal(["scoop"], saved.DisabledSources);
+    }
+
+    [Fact]
+    public void Update_WhenTheFileCannotBeRead_FailsWithoutTouchingIt()
+    {
+        var store = Store();
+        store.Save(new AppSettings { DisabledSources = ["scoop"] });
+        var path = Path.Combine(_dir.FullName, "settings.json");
+
+        using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Write))
+            Assert.ThrowsAny<IOException>(() => store.Update(s => s with { Theme = ThemePreference.Dark }));
+
+        Assert.Equal(ThemePreference.System, store.Load().Theme);
+        Assert.Equal(["scoop"], store.Load().DisabledSources);
+    }
+
+    [Fact]
     public void Load_CorruptFile_BacksUpAndReturnsDefaults()
     {
         var path = Path.Combine(_dir.FullName, "settings.json");
