@@ -1,3 +1,4 @@
+using System.IO;
 using PatchPal.Core.History;
 using PatchPal.Core.Scanning;
 using PatchPal.Core.Settings;
@@ -27,7 +28,20 @@ public static class AppServices
         Sources = [new WingetSource(runner), new ScoopSource(runner), new ChocoSource(runner)];
         ScanService = new ScanService(new RegistryScanner(), Sources);
         BatchUpgradeRunner = new BatchUpgradeRunner(new UpgradeRunner(Sources), HistoryStore);
-        Settings = SettingsStore.Load();
+        Settings = LoadSettings();
+    }
+
+    // Settings that can't be read right now (locked, or access denied) give way to the defaults for this run.
+    private static AppSettings LoadSettings()
+    {
+        try
+        {
+            return SettingsStore.Load();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return new AppSettings();
+        }
     }
 
     public static void SaveSettings() => SettingsStore.Save(Settings);

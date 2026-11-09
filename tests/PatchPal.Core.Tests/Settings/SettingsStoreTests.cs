@@ -52,6 +52,7 @@ public class SettingsStoreTests : IDisposable
         File.WriteAllText(path, "{ not valid json !!");
         var s = Store().Load();
         Assert.Equal(ThemePreference.System, s.Theme);          // defaults, no crash
-        Assert.True(File.Exists(path + ".bak"));                 // corrupt file preserved
+        var backup = Assert.Single(Directory.GetFiles(_dir.FullName, "settings.json*.bak"));
+        Assert.Equal("{ not valid json !!", File.ReadAllText(backup));   // corrupt file preserved
     }
 }

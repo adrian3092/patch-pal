@@ -2,7 +2,10 @@ using PatchPal.Core.Persistence;
 
 namespace PatchPal.Core.Settings;
 
-/// <summary>Settings persistence. Pass a directory for tests; defaults to %APPDATA%\PatchPal.</summary>
+/// <summary>
+/// Settings persistence. Pass a directory for tests; defaults to %APPDATA%\PatchPal.
+/// <see cref="Load"/> throws when the file exists but can't be read; callers fall back to defaults.
+/// </summary>
 public sealed class SettingsStore(string? directory = null)
 {
     private readonly string _path = Path.Combine(

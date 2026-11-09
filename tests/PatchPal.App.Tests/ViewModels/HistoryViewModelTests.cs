@@ -36,6 +36,29 @@ public class HistoryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void Refresh_HistoryItCannotRead_SaysSoInsteadOfLookingEmpty()
+    {
+        var store = Store();
+        store.Append(Entry(DateTimeOffset.Now));
+        var vm = new HistoryViewModel(store);
+
+        // Another program has the file open for writing, so it can't be read right now.
+        using (new FileStream(Path.Combine(_dir.FullName, "history.json"), FileMode.Open, FileAccess.Read, FileShare.Write))
+            vm.Refresh();
+
+        Assert.True(vm.IsEmpty);
+        Assert.StartsWith("Couldn't read the update history", vm.EmptyText);
+    }
+
+    [Fact]
+    public void Refresh_EmptyStore_SaysNothingWasApplied()
+    {
+        var vm = new HistoryViewModel(Store());
+        vm.Refresh();
+        Assert.Equal("No updates applied yet", vm.EmptyText);
+    }
+
+    [Fact]
     public async Task Clear_EmptiesStoreAndGroups()
     {
         var store = Store();

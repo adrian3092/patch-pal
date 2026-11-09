@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Update history can no longer be wiped.** If another program had `history.json` open
+  when an update finished, Patch Pal read the history as empty and saved just the new entry
+  over it. It now leaves the file alone. A save also replaces the file in one step, so a crash
+  can't leave half a file. Two Patch Pal windows no longer overwrite each other's entries, and
+  each corrupt file is kept as its own timestamped `.bak` instead of replacing the last one.
+- The History page says so when it can't read the history, instead of "No updates applied yet".
+- Headless runs warn when `settings.json` is locked, as they already did when access was denied,
+  instead of quietly using the defaults.
+
 ## [2.1.0] - 2026-10-02
 
 ### Changed
