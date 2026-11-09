@@ -17,8 +17,9 @@ public interface IPackageSource
     Task<IReadOnlyList<UpgradeCandidate>> ListOutdatedAsync(CancellationToken ct = default);
 
     /// <summary>
-    /// Invoke the manager's upgrade command for a package id. Callers MUST validate the id
-    /// with <see cref="Upgrading.PackageIdValidator"/> first — UpgradeRunner enforces this.
+    /// Invoke the manager's upgrade command for a package id, from <paramref name="repository"/>
+    /// when the manager named one. Callers MUST validate both with
+    /// <see cref="Upgrading.PackageIdValidator"/> first — UpgradeRunner enforces this.
     /// </summary>
-    Task<ProcessResult> RunUpgradeAsync(string packageId, CancellationToken ct = default);
+    Task<ProcessResult> RunUpgradeAsync(string packageId, string? repository = null, CancellationToken ct = default);
 }

@@ -21,7 +21,7 @@ public class ScanServiceTests
             => throws is null
                 ? Task.FromResult<IReadOnlyList<UpgradeCandidate>>(outdated ?? [])
                 : Task.FromException<IReadOnlyList<UpgradeCandidate>>(throws);
-        public Task<ProcessResult> RunUpgradeAsync(string packageId, CancellationToken ct = default)
+        public Task<ProcessResult> RunUpgradeAsync(string packageId, string? repository = null, CancellationToken ct = default)
             => Task.FromResult(new ProcessResult(0, "", ""));
     }
 

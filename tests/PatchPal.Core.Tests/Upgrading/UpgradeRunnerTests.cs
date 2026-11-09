@@ -21,6 +21,25 @@ public class UpgradeRunnerTests
     }
 
     [Fact]
+    public async Task UpgradesFromTheSourceTheUpdateCameFrom()
+    {
+        var fake = new FakeProcessRunner();
+        await CreateRunner(fake).UpgradeAsync("winget", "9NKSQGP7F2NH", "WhatsApp", repository: "msstore");
+        Assert.Contains("--source msstore", Assert.Single(fake.Calls).Arguments);
+    }
+
+    [Fact]
+    public async Task RefusesAnUnsafeSourceName_WithoutLaunchingAnyProcess()
+    {
+        // The source name comes from winget's output and lands on an elevated command line, like the id.
+        var fake = new FakeProcessRunner();
+        var result = await CreateRunner(fake).UpgradeAsync("winget", "Git.Git", "Git", repository: "winget & calc");
+        Assert.False(result.Success);
+        Assert.StartsWith("Refused:", result.Message);
+        Assert.Empty(fake.Calls);
+    }
+
+    [Fact]
     public async Task UnknownSource_FailsCleanly()
     {
         var result = await CreateRunner(new FakeProcessRunner()).UpgradeAsync("npm", "left-pad", "left-pad");

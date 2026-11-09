@@ -3,20 +3,25 @@ using PatchPal.Core.Sources;
 namespace PatchPal.Core.Upgrading;
 
 /// <summary>
-/// Dispatches an upgrade to the owning package source. Validates the package id BEFORE
-/// any process is launched (ported v1 security fix b95dca8) and translates exit codes
-/// into human-readable messages.
+/// Dispatches an upgrade to the owning package source. Validates the package id, and the
+/// repository the update comes from, BEFORE any process is launched (ported v1 security
+/// fix b95dca8) and translates exit codes into human-readable messages.
 /// </summary>
 public sealed class UpgradeRunner(IEnumerable<IPackageSource> sources)
 {
     private readonly Dictionary<string, IPackageSource> _sources =
         sources.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
 
-    public async Task<UpgradeResult> UpgradeAsync(string source, string packageId, string displayName, CancellationToken ct = default)
+    public async Task<UpgradeResult> UpgradeAsync(
+        string source, string packageId, string displayName, string? repository = null, CancellationToken ct = default)
     {
         if (!PackageIdValidator.IsSafe(packageId))
             return new UpgradeResult(displayName, packageId, source, false, null,
                 "Refused: package id contains unexpected characters.", "");
+
+        if (repository is not null && !PackageIdValidator.IsSafe(repository))
+            return new UpgradeResult(displayName, packageId, source, false, null,
+                "Refused: package source name contains unexpected characters.", "");
 
         if (!_sources.TryGetValue(source, out var src))
             return new UpgradeResult(displayName, packageId, source, false, null,
@@ -24,7 +29,7 @@ public sealed class UpgradeRunner(IEnumerable<IPackageSource> sources)
 
         try
         {
-            var proc = await src.RunUpgradeAsync(packageId, ct);
+            var proc = await src.RunUpgradeAsync(packageId, repository, ct);
             var log = string.Join('\n', new[] { proc.StdOut, proc.StdErr }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
             return new UpgradeResult(displayName, packageId, source,
                 proc.ExitCode == 0, proc.ExitCode,

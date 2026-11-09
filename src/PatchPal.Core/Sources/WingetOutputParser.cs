@@ -37,10 +37,13 @@ public static class WingetOutputParser
             var starts = WordStarts(row);
             if (!columns.All(starts.Contains)) continue;
             upgrades.Add(new UpgradeCandidate(
-                Cell(row, columns, 0), Cell(row, columns, 1), Cell(row, columns, 2), Cell(row, columns, 3), "winget"));
+                Cell(row, columns, 0), Cell(row, columns, 1), Cell(row, columns, 2), Cell(row, columns, 3), "winget",
+                Repository: columns.Count == 5 ? NullIfEmpty(Cell(row, columns, 4)) : null));
         }
         return upgrades;
     }
+
+    private static string? NullIfEmpty(string text) => text.Length == 0 ? null : text;
 
     /// <summary>True when the output contains a table, whether or not <see cref="Parse"/> could read it.</summary>
     internal static bool ContainsTable(string? raw) => SplitLines(raw).Any(IsSeparator);

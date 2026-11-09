@@ -133,6 +133,19 @@ public class ReportMergerTests
     }
 
     [Fact]
+    public void UpdateRows_KeepTheSourceTheUpdateCameFrom()
+    {
+        var rows = ReportMerger.Merge(
+            [new InstalledProgram("WhatsApp", "2.2440.9.0", "WhatsApp Inc.")],
+            [new UpgradeCandidate("WhatsApp", "9NKSQGP7F2NH", "2.2440.9.0", "2.2442.6.0", "winget", "msstore"),
+             new UpgradeCandidate("Store App", "9WZDNCRFJ3PZ", "1.0", "2.0", "winget", "msstore")],   // not in the registry
+            ["winget"]);
+
+        Assert.Equal(2, rows.Count(r => r.IsUpdate));
+        Assert.All(rows, r => Assert.Equal("msstore", r.Repository));
+    }
+
+    [Fact]
     public void UpdatesSortFirst_ThenByName()
     {
         var rows = MergedRows();

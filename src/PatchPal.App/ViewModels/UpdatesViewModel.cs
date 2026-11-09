@@ -172,7 +172,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
 
         IsUpdating = true;
         var byKey = rows.ToDictionary(r => $"{r.Source}|{r.Row.PackageId}");
-        var items = rows.Select(r => new BatchItem(r.Source, r.Row.PackageId, r.Name, r.Current, r.Available)).ToList();
+        var items = rows.Select(r => new BatchItem(r.Source, r.Row.PackageId, r.Name, r.Current, r.Available, r.Row.Repository)).ToList();
 
         void OnUi(Action action)
         {

@@ -3,7 +3,8 @@ using PatchPal.Core.History;
 namespace PatchPal.Core.Upgrading;
 
 /// <summary>One queued upgrade: where it goes and what versions it moves between.</summary>
-public sealed record BatchItem(string Source, string PackageId, string Name, string FromVersion, string ToVersion);
+public sealed record BatchItem(
+    string Source, string PackageId, string Name, string FromVersion, string ToVersion, string? Repository = null);
 
 /// <summary>
 /// Runs a batch of upgrades: sequential within each source (a package manager cannot
@@ -29,7 +30,7 @@ public sealed class BatchUpgradeRunner(UpgradeRunner runner, HistoryStore histor
             {
                 ct.ThrowIfCancellationRequested();
                 onItemStarted?.Invoke(item);
-                var result = Record(item, await runner.UpgradeAsync(item.Source, item.PackageId, item.Name, ct));
+                var result = Record(item, await runner.UpgradeAsync(item.Source, item.PackageId, item.Name, item.Repository, ct));
                 lock (gate) results.Add(result);
                 onItemFinished?.Invoke(item, result);
             }
