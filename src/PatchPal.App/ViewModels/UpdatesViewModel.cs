@@ -116,7 +116,9 @@ public sealed partial class UpdatesViewModel : ObservableObject
 
             Warnings.Clear();
             foreach (var w in result.Warnings) Warnings.Add(w);
-            if (result.EnabledSources.Count == 0)
+            if (options.AllSourcesOff)
+                Warnings.Add("Every package source is switched off in Settings, so updates aren't checked.");
+            else if (result.EnabledSources.Count == 0)
                 Warnings.Add("No package manager detected (winget, Scoop, Chocolatey) — updates cannot be checked.");
             OnPropertyChanged(nameof(EmptyStateText));
 

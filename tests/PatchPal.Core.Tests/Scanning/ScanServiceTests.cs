@@ -1,5 +1,6 @@
 using PatchPal.Core.Models;
 using PatchPal.Core.Scanning;
+using PatchPal.Core.Settings;
 using PatchPal.Core.Sources;
 
 namespace PatchPal.Core.Tests.Scanning;
@@ -80,6 +81,20 @@ public class ScanServiceTests
         var result = await service.ScanAsync(new ScanOptions(["scoop"], false));
 
         Assert.Equal(new[] { "scoop" }, result.EnabledSources);
+    }
+
+    [Fact]
+    public async Task EverySourceSwitchedOff_AsksNone()
+    {
+        // An empty source list used to mean "every source", so switching them all off asked them all.
+        var service = new ScanService(new FakePrograms(Chrome),
+            [new FakeSource("winget"), new FakeSource("scoop"), new FakeSource("chocolatey")]);
+        var allOff = new AppSettings { DisabledSources = ["winget", "scoop", "chocolatey"] };
+
+        var result = await service.ScanAsync(ScanOptions.FromSettings(allOff));
+
+        Assert.Empty(result.EnabledSources);
+        Assert.Single(result.Rows);                              // installed programs are still listed
     }
 
     [Fact]
