@@ -21,6 +21,6 @@ public sealed class ScoopSource(IProcessRunner runner) : IPackageSource
     // Scoop runs as the current user (no elevation). The id is interpolated into a
     // child-shell command, so it MUST stay constrained to the safe id charset enforced
     // by PackageIdValidator (UpgradeRunner refuses unsafe ids before reaching here).
-    public Task<ProcessResult> RunUpgradeAsync(string packageId, CancellationToken ct = default)
+    public Task<ProcessResult> RunUpgradeAsync(string packageId, string? repository = null, CancellationToken ct = default)
         => runner.RunAsync("powershell", $"-NoProfile -Command \"scoop update {packageId}\"", ct);
 }

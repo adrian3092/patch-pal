@@ -29,6 +29,16 @@ public class PackageSourceTests
     }
 
     [Fact]
+    public async Task Winget_Upgrade_UsesTheSourceTheUpdateCameFrom()
+    {
+        var runner = new FakeProcessRunner();
+        await new WingetSource(runner).RunUpgradeAsync("9NKSQGP7F2NH", "msstore");
+        Assert.Equal(
+            "upgrade --id 9NKSQGP7F2NH --exact --source msstore --accept-package-agreements --accept-source-agreements --disable-interactivity -h",
+            Assert.Single(runner.Calls).Arguments);
+    }
+
+    [Fact]
     public async Task Scoop_Upgrade_RunsAsCurrentUserThroughPowerShell()
     {
         // The id is interpolated into a child-shell command, so callers MUST validate it

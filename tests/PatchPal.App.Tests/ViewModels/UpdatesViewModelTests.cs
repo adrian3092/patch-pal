@@ -411,6 +411,33 @@ public class UpdatesViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateOne_StoreApp_UpgradesFromTheStoreSource()
+    {
+        // winget lists Microsoft Store apps with Source "msstore"; asking winget's own source for one fails.
+        var runner = new FakeRunner
+        {
+            ListOutput = string.Join('\n',
+                WingetRow("Name", "Id", "Version", "Available", "Source"),
+                new string('-', 70),
+                WingetRow("WhatsApp", "9NKSQGP7F2NH", "2.2440.9.0", "2.2442.6.0", "msstore"),
+                "1 upgrades available.",
+                ""),
+        };
+        var sources = new IPackageSource[] { new WingetSource(runner) };
+        var vm = new UpdatesViewModel(
+            new ScanService(new FakePrograms(new InstalledProgram("WhatsApp", "2.2440.9.0", "WhatsApp Inc.")), sources),
+            new BatchUpgradeRunner(new UpgradeRunner(sources), new HistoryStore(_dir.FullName)),
+            new ScanState(), new AppSettings());
+        await vm.ScanAsync();
+
+        await vm.UpdateOneAsync(Assert.Single(vm.Rows));
+
+        var upgrade = Assert.Single(runner.Calls, c => c.Elevated);
+        Assert.Contains("--id 9NKSQGP7F2NH", upgrade.Arguments);
+        Assert.Contains("--source msstore", upgrade.Arguments);
+    }
+
+    [Fact]
     public async Task UpdateOne_SelfUpdatingApp_LaunchesNothing()
     {
         var (vm, runner) = SetupWithEdge();
@@ -426,7 +453,7 @@ public class UpdatesViewModelTests : IDisposable
         public bool IsInstalled() => true;
         public Task<IReadOnlyList<UpgradeCandidate>> ListOutdatedAsync(CancellationToken ct = default)
             => Task.FromException<IReadOnlyList<UpgradeCandidate>>(new InvalidOperationException("boom"));
-        public Task<ProcessResult> RunUpgradeAsync(string packageId, CancellationToken ct = default)
+        public Task<ProcessResult> RunUpgradeAsync(string packageId, string? repository = null, CancellationToken ct = default)
             => Task.FromResult(new ProcessResult(0, "", ""));
     }
 }

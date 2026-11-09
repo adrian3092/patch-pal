@@ -36,7 +36,8 @@ public static class ReportMerger
                     Available: isNewer ? match.Available : "",
                     Status: isNewer ? "Update available" : "Up to date",
                     PackageId: isNewer ? match.Id : "",
-                    PackageSource: isNewer ? match.PackageSource : ""));
+                    PackageSource: isNewer ? match.PackageSource : "",
+                    Repository: isNewer ? match.Repository : null));
             }
             else
             {
@@ -49,7 +50,7 @@ public static class ReportMerger
         {
             if (matchedKeys.Contains($"{up.PackageSource}|{up.Id}")) continue;
             rows.Add(new ReportRow(up.Name, "", up.Current, up.Available,
-                $"Update available ({up.PackageSource} only)", up.Id, up.PackageSource));
+                $"Update available ({up.PackageSource} only)", up.Id, up.PackageSource, up.Repository));
         }
 
         return ResolveDuplicatePackageRows(rows)

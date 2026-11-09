@@ -18,6 +18,6 @@ public sealed class ChocoSource(IProcessRunner runner) : IPackageSource
         return upgrades;
     }
 
-    public Task<ProcessResult> RunUpgradeAsync(string packageId, CancellationToken ct = default)
+    public Task<ProcessResult> RunUpgradeAsync(string packageId, string? repository = null, CancellationToken ct = default)
         => runner.RunElevatedAsync("choco", $"upgrade {packageId} -y", ct);
 }

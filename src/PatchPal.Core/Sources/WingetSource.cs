@@ -25,7 +25,9 @@ public sealed class WingetSource(IProcessRunner runner) : IPackageSource
         return upgrades;
     }
 
-    public Task<ProcessResult> RunUpgradeAsync(string packageId, CancellationToken ct = default)
+    // From the source the update was listed under: Microsoft Store apps come from "msstore", and the
+    // user may have added sources of their own. winget's own catalog when the list didn't say.
+    public Task<ProcessResult> RunUpgradeAsync(string packageId, string? repository = null, CancellationToken ct = default)
         => runner.RunElevatedAsync("winget",
-            $"upgrade --id {packageId} --exact --source winget --accept-package-agreements --accept-source-agreements --disable-interactivity -h", ct);
+            $"upgrade --id {packageId} --exact --source {repository ?? "winget"} --accept-package-agreements --accept-source-agreements --disable-interactivity -h", ct);
 }

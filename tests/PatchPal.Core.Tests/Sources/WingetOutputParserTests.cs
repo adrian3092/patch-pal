@@ -267,6 +267,25 @@ public class WingetOutputParserTests
 
         Assert.Equal("Git.Git", git.Id);
         Assert.Equal("2.45.2", git.Available);
+        Assert.Null(git.Repository);                             // the table doesn't say where it comes from
+    }
+
+    [Fact]
+    public void Parse_ReadsWhichSourceEachUpdateComesFrom()
+    {
+        // winget lists Microsoft Store apps beside its own packages; each must be upgraded from its own source.
+        var raw = string.Join('\n',
+            Row("Name", "Id", "Version", "Available", "Source"),
+            new string('-', 120),
+            Row("Git", "Git.Git", "2.44.0", "2.45.2", "winget"),
+            Row("WhatsApp", "9NKSQGP7F2NH", "2.2440.9.0", "2.2442.6.0", "msstore"),
+            "2 upgrades available.",
+            "");
+
+        var result = WingetOutputParser.Parse(raw);
+
+        Assert.Equal(["winget", "msstore"], result.Select(u => u.Repository));
+        Assert.All(result, u => Assert.Equal("winget", u.PackageSource));   // both are still winget's to upgrade
     }
 
     [Fact]
