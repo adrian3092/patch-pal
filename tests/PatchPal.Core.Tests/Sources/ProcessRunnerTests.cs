@@ -40,4 +40,21 @@ public class ProcessRunnerTests
             File.Delete(marker);
         }
     }
+
+    [Fact]
+    public async Task RunAsync_RemovesDotnetLoaderVarsFromChildren()
+    {
+        // Loader-injection variables must not reach the (elevated) children Patch Pal starts.
+        // cmd prints an unset %NAME% as its literal text.
+        Environment.SetEnvironmentVariable("DOTNET_STARTUP_HOOKS", @"C:\x.dll");
+        try
+        {
+            var r = await new ProcessRunner().RunAsync(WindowsTools.CmdPath, "/c echo [%DOTNET_STARTUP_HOOKS%]");
+            Assert.Contains("[%DOTNET_STARTUP_HOOKS%]", r.StdOut);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("DOTNET_STARTUP_HOOKS", null);
+        }
+    }
 }
