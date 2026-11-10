@@ -55,7 +55,6 @@ This work closes those paths.
 - **Making the portable zip safe in a user folder.** That isn't possible while it runs as admin. The owner chose to keep publishing it.
 - **Cleaning up old `%TEMP%\.net\PatchPal` folders.** Nothing loads them after this change.
 - **A standard user's "for me only" copy when a different admin account approves setup.** Setup then runs as that admin and can't see the other user's install. The README says how to remove it.
-- **Patch Pal's own data files.** It writes them as admin in `%APPDATA%\PatchPal`. This is an open question for the owner; see the end.
 
 ## Anti-goals
 
@@ -98,7 +97,7 @@ Each of these counts as a failure even if everything else works.
 - **Scoop apps installed for all users** (`scoop install -g`) need admin to update. Patch Pal won't run Scoop as admin for them. Their update fails with a message telling the user to run `scoop update -g <app>` from an admin prompt. The builder checks how such apps appear in `scoop status`.
 - **The DLL search** is locked with `SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)` as the first statement of `Program.Main`.
 - **Startup hooks (row 9)** are turned off at build time with `StartupHookSupport=false`. This costs nothing and closes one of the two variables.
-- **Child processes Patch Pal starts as admin** (choco, and anything else) get a cleaned set of environment variables, with the .NET and .NET-Framework loader variables removed, so Patch Pal can't be used to hand those on to an elevated child. The profiler variable on the app's own process (the other half of row 9) can't be closed from inside the app; the launcher question below is about that.
+- **Child processes Patch Pal starts as admin** (choco, and anything else) get a cleaned set of environment variables, with the .NET and .NET-Framework loader variables removed, so Patch Pal can't be used to hand those on to an elevated child. The profiler variable on the app's own process (the other half of row 9) can't be closed from inside the app; the owner chose to accept that rather than add a launcher (see "Decided by the owner").
 - **Checks that need admin** run on the owner's PC with the owner at the keyboard, approving each prompt, in a session they attend; nothing is pushed for CI unless the owner picks the automated path in the testing question below. Installer builds use the existing `workflow_dispatch`, which doesn't need a tag.
 
 ## Where the code is
