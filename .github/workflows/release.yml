@@ -54,9 +54,25 @@ jobs:
           $v = '${{ steps.ver.outputs.version }}'
           foreach ($arch in 'x64','arm64') {
             dotnet publish src/PatchPal.App -c Release -r "win-$arch" --self-contained `
-              -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+              -p:PublishSingleFile=true `
               -p:Version=$v -o "dist/publish-$arch"
             if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
+
+      - name: Verify native DLLs sit beside the exe
+        shell: pwsh
+        run: |
+          # WPF's native DLLs must ship beside PatchPal.exe (not self-extract into %TEMP%).
+          # Fail if one is missing or a new one appears that setup.iss and the zip would not carry.
+          $expected = 'D3DCompiler_47_cor3.dll','PenImc_cor3.dll','PresentationNative_cor3.dll','vcruntime140_cor3.dll','wpfgfx_cor3.dll'
+          foreach ($arch in 'x64','arm64') {
+            $actual = @(Get-ChildItem "dist/publish-$arch" -Filter *.dll -File | ForEach-Object Name)
+            $diff = Compare-Object ($expected | Sort-Object) ($actual | Sort-Object)
+            if ($diff) {
+              Write-Host "Unexpected DLL set in dist/publish-${arch}:"
+              $diff | Format-Table | Out-String | Write-Host
+              exit 1
+            }
           }
 
       - name: Install Inno Setup
@@ -81,7 +97,7 @@ jobs:
           foreach ($arch in 'x64','arm64') {
             $stage = "dist/portable-$arch"
             New-Item -ItemType Directory -Force -Path $stage | Out-Null
-            Copy-Item "dist/publish-$arch/PatchPal.exe", 'README.md', 'LICENSE', 'CHANGELOG.md' $stage
+            Copy-Item "dist/publish-$arch/PatchPal.exe", "dist/publish-$arch/*_cor3.dll", 'README.md', 'LICENSE', 'CHANGELOG.md' $stage
             Compress-Archive -Path "$stage/*" -DestinationPath "dist/PatchPal-portable-$v-$arch.zip" -Force
           }
 
