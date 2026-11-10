@@ -17,9 +17,17 @@ public static class Program
     [DllImport("kernel32.dll")]
     private static extern IntPtr GetStdHandle(int nStdHandle);
 
+    private const uint LOAD_LIBRARY_SEARCH_DEFAULT_DIRS = 0x1000;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool SetDefaultDllDirectories(uint directoryFlags);
+
     [STAThread]
     public static int Main(string[] args)
     {
+        // Restrict DLL loading to the app directory + System32 (no working-dir / PATH search).
+        SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+
         var options = CliOptions.Parse(args);
         if (options.IsHeadless)
         {

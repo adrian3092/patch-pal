@@ -12,13 +12,14 @@ public sealed class ProcessRunner : IProcessRunner
         // stubs, so ask where.exe — its exit code is authoritative.
         try
         {
-            var psi = new ProcessStartInfo("where.exe", command)
+            var psi = new ProcessStartInfo(WindowsTools.WherePath, command)
             {
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
             };
+            ScrubLoaderVars(psi);
             using var proc = Process.Start(psi);
             if (proc is null) return false;
             proc.StandardOutput.ReadToEnd();
@@ -44,6 +45,8 @@ public sealed class ProcessRunner : IProcessRunner
             StandardErrorEncoding = Encoding.UTF8,
         };
 
+        ScrubLoaderVars(psi);
+
         Process? proc;
         try
         {
@@ -55,7 +58,7 @@ public sealed class ProcessRunner : IProcessRunner
             // cannot always launch (observed: Explorer-launched GUI). cmd.exe resolves
             // them reliably. fileName/arguments are fixed strings + validated package ids,
             // so no untrusted text reaches this command line.
-            var viaCmd = new ProcessStartInfo("cmd.exe", $"/d /s /c \"{fileName} {arguments}\"")
+            var viaCmd = new ProcessStartInfo(WindowsTools.CmdPath, $"/d /s /c \"{fileName} {arguments}\"")
             {
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -64,6 +67,7 @@ public sealed class ProcessRunner : IProcessRunner
                 StandardOutputEncoding = Encoding.UTF8,
                 StandardErrorEncoding = Encoding.UTF8,
             };
+            ScrubLoaderVars(viaCmd);
             proc = Process.Start(viaCmd);
         }
         if (proc is null) throw new InvalidOperationException($"Failed to start {fileName}");
@@ -105,6 +109,19 @@ public sealed class ProcessRunner : IProcessRunner
             ?? throw new InvalidOperationException($"Failed to start {fileName}");
         await proc.WaitForExitAsync(ct);
         return new ProcessResult(proc.ExitCode, "", "");
+    }
+
+    private static readonly string[] LoaderVarPrefixes = ["DOTNET_", "CORECLR_", "COR_"];
+
+    // .NET / .NET Framework loader variables (DOTNET_STARTUP_HOOKS, COR_PROFILER, ...) can inject
+    // code into a child process; never hand them to the elevated children we start.
+    private static void ScrubLoaderVars(ProcessStartInfo psi)
+    {
+        var doomed = psi.Environment.Keys
+            .Where(k => LoaderVarPrefixes.Any(p => k.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+        foreach (var key in doomed)
+            psi.Environment.Remove(key);
     }
 
     private static bool IsElevated()
