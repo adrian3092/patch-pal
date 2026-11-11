@@ -64,8 +64,11 @@ jobs:
         run: |
           # WPF's native DLLs must ship beside PatchPal.exe (not self-extract into %TEMP%).
           # Fail if one is missing or a new one appears that setup.iss and the zip would not carry.
-          $expected = 'D3DCompiler_47_cor3.dll','PenImc_cor3.dll','PresentationNative_cor3.dll','vcruntime140_cor3.dll','wpfgfx_cor3.dll'
+          # The arm64 runtime has no D3DCompiler_47_cor3.dll.
+          $common = 'PenImc_cor3.dll','PresentationNative_cor3.dll','vcruntime140_cor3.dll','wpfgfx_cor3.dll'
+          $expectedByArch = @{ x64 = $common + 'D3DCompiler_47_cor3.dll'; arm64 = $common }
           foreach ($arch in 'x64','arm64') {
+            $expected = $expectedByArch[$arch]
             $actual = @(Get-ChildItem "dist/publish-$arch" -Filter *.dll -File | ForEach-Object Name)
             $diff = Compare-Object ($expected | Sort-Object) ($actual | Sort-Object)
             if ($diff) {
