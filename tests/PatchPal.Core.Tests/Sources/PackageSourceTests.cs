@@ -86,21 +86,67 @@ public class PackageSourceTests
     }
 
     [Fact]
-    public async Task Choco_Upgrade_IsElevated()
+    public async Task Choco_Upgrade_RunsTheTrustedChocoExeElevated()
     {
         var runner = new FakeProcessRunner();
-        await new ChocoSource(runner).RunUpgradeAsync("git.install");
+        await new ChocoSource(runner, FakeChocolateyLocator.Installed).RunUpgradeAsync("git.install");
         var call = Assert.Single(runner.Calls);
-        Assert.Equal("choco", call.FileName);
+        Assert.Equal(FakeChocolateyLocator.DefaultPath, call.FileName);
         Assert.Equal("upgrade git.install -y", call.Arguments);
         Assert.True(call.Elevated);
+    }
+
+    [Fact]
+    public async Task Choco_Outdated_RunsTheTrustedChocoExe()
+    {
+        var runner = new FakeProcessRunner();
+        await new ChocoSource(runner, FakeChocolateyLocator.Installed).ListOutdatedAsync();
+        var call = Assert.Single(runner.Calls);
+        Assert.Equal(FakeChocolateyLocator.DefaultPath, call.FileName);
+        Assert.Equal("outdated -r --no-color", call.Arguments);
+    }
+
+    [Fact]
+    public async Task Choco_PinsChocolateyInstallToTheTrustedFolder()
+    {
+        // choco.exe takes its home (config, helpers, extensions, package scripts) from the
+        // ChocolateyInstall variable, which a user-level variable can override. Pin it on every start.
+        var runner = new FakeProcessRunner();
+        var source = new ChocoSource(runner, FakeChocolateyLocator.Installed);
+        await source.ListOutdatedAsync();
+        await source.RunUpgradeAsync("git.install");
+        Assert.Equal(2, runner.Environments.Count);
+        Assert.All(runner.Environments, env =>
+        {
+            Assert.NotNull(env);
+            Assert.Equal(@"C:\ProgramData\chocolatey", env["ChocolateyInstall"]);
+        });
+    }
+
+    [Fact]
+    public void Choco_NotInstalled_WhenTheLocatorFindsNoTrustedChoco()
+    {
+        // Even when a choco.cmd/choco.exe is on PATH (CommandExists true), only the locator counts.
+        var source = new ChocoSource(new FakeProcessRunner { Exists = true }, new FakeChocolateyLocator(null));
+        Assert.False(source.IsInstalled());
+    }
+
+    [Fact]
+    public async Task Choco_NotInstalled_RunsNothing()
+    {
+        var runner = new FakeProcessRunner();
+        var source = new ChocoSource(runner, new FakeChocolateyLocator(null));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => source.ListOutdatedAsync());
+        var result = await source.RunUpgradeAsync("git.install");
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Empty(runner.Calls);
     }
 
     [Fact]
     public async Task ListOutdated_FeedsRawOutputToParser()
     {
         var runner = new FakeProcessRunner { StdOut = "7zip|23.1.0|24.8.0|false\n" };
-        var result = await new ChocoSource(runner).ListOutdatedAsync();
+        var result = await new ChocoSource(runner, FakeChocolateyLocator.Installed).ListOutdatedAsync();
         Assert.Single(result);
         Assert.Equal("7zip", result[0].Id);
     }
@@ -118,7 +164,7 @@ public class PackageSourceTests
     public async Task ListOutdated_NonZeroExitWithValidTable_StillReturnsUpgrades()
     {
         var runner = new FakeProcessRunner { ExitCode = -1978335162, StdOut = "7zip|23.1.0|24.8.0|false\n" };
-        var result = await new ChocoSource(runner).ListOutdatedAsync();
+        var result = await new ChocoSource(runner, FakeChocolateyLocator.Installed).ListOutdatedAsync();
         Assert.Single(result);
     }
 
@@ -150,7 +196,7 @@ public class PackageSourceTests
         {
             "winget" => new WingetSource(runner),
             "scoop" => new ScoopSource(runner),
-            _ => new ChocoSource(runner),
+            _ => new ChocoSource(runner, FakeChocolateyLocator.Installed),
         };
         Assert.Equal(sourceName, source.Name);
         Assert.True(source.IsInstalled());

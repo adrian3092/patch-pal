@@ -26,7 +26,7 @@ public static class AppServices
     static AppServices()
     {
         var runner = new ProcessRunner();
-        Sources = [new WingetSource(runner), new ScoopSource(runner), new ChocoSource(runner)];
+        Sources = [new WingetSource(runner), new ScoopSource(runner), new ChocoSource(runner, new ChocolateyLocator())];
         ScanService = new ScanService(new RegistryScanner(), Sources);
         BatchUpgradeRunner = new BatchUpgradeRunner(new UpgradeRunner(Sources), HistoryStore);
         Settings = LoadSettings();

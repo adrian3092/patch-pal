@@ -15,7 +15,7 @@ public class CliRunnerTests
         // A scheduled report must respect the Settings page, like the Updates page does.
         var winget = new FakeRunner();
         var choco = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
-        var service = new ScanService(new FakePrograms(), [new WingetSource(winget), new ChocoSource(choco)]);
+        var service = new ScanService(new FakePrograms(), [new WingetSource(winget), new ChocoSource(choco, FakeChocoLocator.Installed)]);
         var output = new StringWriter();
 
         var code = await CliRunner.RunAsync(CliOptions.Parse(["--no-gui"]), service,

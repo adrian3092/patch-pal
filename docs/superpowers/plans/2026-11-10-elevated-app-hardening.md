@@ -342,7 +342,7 @@ git commit -m "fix: run Scoop with the user's normal rights, not as admin"
 - Produces: `ChocolateyLocator(IDirectoryTrust trust, Func<string?> readMachineChocolateyInstall)` and `DirectoryTrust : IDirectoryTrust` (production ACL/owner check).
 - Consumes (ChocoSource): `IChocolateyLocator`; `IProcessRunner` (unchanged, still `RunElevatedAsync` for upgrades — choco is a machine tool).
 
-- [ ] **Step 1: Write failing locator tests (RED)**
+- [x] **Step 1: Write failing locator tests (RED)**
 
 ```csharp
 // ChocolateyLocatorTests.cs
@@ -374,11 +374,11 @@ public void MissingValue_FallsBackToCommonAppDataChocolatey()
 }
 ```
 
-- [ ] **Step 2: Run; verify fail.**
+- [x] **Step 2: Run; verify fail.**
 
-- [ ] **Step 3: Implement `ChocolateyLocator`** — resolve the install dir from `readMachineChocolateyInstall()` or, when null/empty, `Path.Combine(Environment.GetFolderPath(SpecialFolder.CommonApplicationData), "chocolatey")`. Build `<dir>\bin\choco.exe`. Return it only if `File.Exists(path) && trust.IsAdminOnly(dir)`, else `null`.
+- [x] **Step 3: Implement `ChocolateyLocator`** — resolve the install dir from `readMachineChocolateyInstall()` or, when null/empty, `Path.Combine(Environment.GetFolderPath(SpecialFolder.CommonApplicationData), "chocolatey")`. Build `<dir>\bin\choco.exe`. Return it only if `File.Exists(path) && trust.IsAdminOnly(dir)`, else `null`.
 
-- [ ] **Step 4a: Write the failing `DirectoryTrust` test (RED)**
+- [x] **Step 4a: Write the failing `DirectoryTrust` test (RED)**
 
 ```csharp
 // DirectoryTrustTests.cs
@@ -400,11 +400,11 @@ public void MissingDir_IsNotAdminOnly()
 ```
 Run it; verify it fails (`DirectoryTrust` not defined).
 
-- [ ] **Step 4b: Implement `DirectoryTrust.IsAdminOnly`** — using `DirectoryInfo.GetAccessControl()`, return false if any writable right (Write/CreateFiles/CreateDirectories/Modify/FullControl, allow) is granted to a non-admin principal (anyone other than SYSTEM, Administrators, TrustedInstaller, the admin-owned built-ins); return false when the directory is missing or the ACL can't be read. Keep it small and conservative: unknown → not trusted. Run the Step 4a tests; verify pass.
+- [x] **Step 4b: Implement `DirectoryTrust.IsAdminOnly`** — using `DirectoryInfo.GetAccessControl()`, return false if any writable right (Write/CreateFiles/CreateDirectories/Modify/FullControl, allow) is granted to a non-admin principal (anyone other than SYSTEM, Administrators, TrustedInstaller, the admin-owned built-ins); return false when the directory is missing or the ACL can't be read. Keep it small and conservative: unknown → not trusted. Run the Step 4a tests; verify pass.
 
-- [ ] **Step 5: Add the production machine-registry reader** — a small static `ChocolateyLocator.ReadMachineChocolateyInstall()` that reads `ChocolateyInstall` from `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment` via `Microsoft.Win32.Registry` (not the process environment). Used by a convenience constructor `ChocolateyLocator()` that wires `new DirectoryTrust()` + this reader.
+- [x] **Step 5: Add the production machine-registry reader** — a small static `ChocolateyLocator.ReadMachineChocolateyInstall()` that reads `ChocolateyInstall` from `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment` via `Microsoft.Win32.Registry` (not the process environment). Used by a convenience constructor `ChocolateyLocator()` that wires `new DirectoryTrust()` + this reader.
 
-- [ ] **Step 6: Write failing `ChocoSource` tests (RED)**
+- [x] **Step 6: Write failing `ChocoSource` tests (RED)**
 
 ```csharp
 // PackageSourceTests.cs
@@ -430,15 +430,15 @@ public async Task Choco_Upgrade_RunsTheTrustedChocoExeElevated()
 }
 ```
 
-- [ ] **Step 7: Run; verify fail.**
+- [x] **Step 7: Run; verify fail.**
 
-- [ ] **Step 8: Change `ChocoSource`** to `ChocoSource(IProcessRunner runner, IChocolateyLocator locator)`: `IsInstalled()` → `locator.ChocoExePath is not null`; `ListOutdatedAsync`/`RunUpgradeAsync` use `locator.ChocoExePath!` as the filename instead of `"choco"`. Update the `IsInstalled_ChecksTheRightExecutable` theory: choco's branch now constructs `new ChocoSource(runner, new FakeLocator(@"...\choco.exe"))`, and the `ExecutableName`-equals-`choco` assertion stays if `ExecutableName` is kept for display, or is dropped for choco.
+- [x] **Step 8: Change `ChocoSource`** to `ChocoSource(IProcessRunner runner, IChocolateyLocator locator)`: `IsInstalled()` → `locator.ChocoExePath is not null`; `ListOutdatedAsync`/`RunUpgradeAsync` use `locator.ChocoExePath!` as the filename instead of `"choco"`. Update the `IsInstalled_ChecksTheRightExecutable` theory: choco's branch now constructs `new ChocoSource(runner, new FakeLocator(@"...\choco.exe"))`, and the `ExecutableName`-equals-`choco` assertion stays if `ExecutableName` is kept for display, or is dropped for choco.
 
-- [ ] **Step 9: Wire the real locator** at both composition sites — `AppServices.cs:29` and `Cli/CliRunner.cs:31` — changing `new ChocoSource(runner)` to `new ChocoSource(runner, new ChocolateyLocator())`.
+- [x] **Step 9: Wire the real locator** at both composition sites — `AppServices.cs:29` and `Cli/CliRunner.cs:31` — changing `new ChocoSource(runner)` to `new ChocoSource(runner, new ChocolateyLocator())`.
 
-- [ ] **Step 10: Run the suite; verify pass.** Run: `dotnet test -warnaserror`.
+- [x] **Step 10: Run the suite; verify pass.** Run: `dotnet test -warnaserror`.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add src/PatchPal.Core/Sources/IChocolateyLocator.cs src/PatchPal.Core/Sources/ChocolateyLocator.cs src/PatchPal.Core/Sources/ChocoSource.cs tests/PatchPal.Core.Tests/Sources/ChocolateyLocatorTests.cs tests/PatchPal.Core.Tests/Sources/PackageSourceTests.cs src/PatchPal.App

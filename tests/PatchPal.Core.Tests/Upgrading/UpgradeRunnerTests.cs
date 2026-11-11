@@ -7,7 +7,7 @@ namespace PatchPal.Core.Tests.Upgrading;
 public class UpgradeRunnerTests
 {
     private static UpgradeRunner CreateRunner(FakeProcessRunner fake)
-        => new([new WingetSource(fake), new ScoopSource(fake), new ChocoSource(fake)]);
+        => new([new WingetSource(fake), new ScoopSource(fake), new ChocoSource(fake, FakeChocolateyLocator.Installed)]);
 
     [Fact]
     public async Task RefusesCraftedId_WithoutLaunchingAnyProcess()
