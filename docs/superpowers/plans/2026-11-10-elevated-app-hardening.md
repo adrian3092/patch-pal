@@ -505,17 +505,17 @@ git commit -m "fix: open the About link through the shell so the browser runs de
 
 No xUnit tests — Inno Setup. Verified by `release.yml` `workflow_dispatch` build and the four manual install cases.
 
-- [ ] **Step 1: Force all-users** — in `[Setup]`, set `PrivilegesRequired=admin` and delete the `PrivilegesRequiredOverridesAllowed=dialog` line. Leave `{autopf}`/`{autoprograms}`/`{autodesktop}` as-is (they now resolve machine-wide).
+- [x] **Step 1: Force all-users** — in `[Setup]`, set `PrivilegesRequired=admin` and delete the `PrivilegesRequiredOverridesAllowed=dialog` line. Leave `{autopf}`/`{autoprograms}`/`{autodesktop}` as-is (they now resolve machine-wide).
 
-- [ ] **Step 2: Remove the old per-user copy** — add a `[Code]` `InitializeSetup` (or `PrepareToInstall`) step that:
+- [x] **Step 2: Remove the old per-user copy** — add a `[Code]` `InitializeSetup` (or `PrepareToInstall`) step that:
   - reads `UninstallString` from `HKCU\...\Uninstall\{60cbe8cd-e316-4bc8-9a92-96305ec2c7d2}_is1`;
   - if present, runs it with `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART` via `ExecAsOriginalUser`, waiting for exit;
   - never blocks the install on failure; if it failed, set a flag so a closing message says the old per-user copy is still there.
   - Do **not** add an `[UninstallDelete]` for `%APPDATA%\PatchPal` (settings/history must survive).
 
-- [ ] **Step 3: Compile-check locally if ISCC is available; otherwise rely on CI.** If `C:\Program Files (x86)\Inno Setup 6\ISCC.exe` exists, run it against `setup.iss` with the dev defines and confirm it compiles. (ISCC is not installed on the owner's PC; the `workflow_dispatch` build is the gate.)
+- [x] **Step 3: Compile-check locally if ISCC is available; otherwise rely on CI.** If `C:\Program Files (x86)\Inno Setup 6\ISCC.exe` exists, run it against `setup.iss` with the dev defines and confirm it compiles. (ISCC is not installed on the owner's PC; the `workflow_dispatch` build is the gate.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add installer/setup.iss
