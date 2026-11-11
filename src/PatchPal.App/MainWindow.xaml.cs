@@ -44,8 +44,7 @@ public partial class MainWindow : FluentWindow
         var result = await box.ShowDialogAsync();
         if (result == Wpf.Ui.Controls.MessageBoxResult.Primary)
         {
-            System.Diagnostics.Process.Start(
-                new System.Diagnostics.ProcessStartInfo(AppInfo.RepoUrl) { UseShellExecute = true });
+            PatchPal.Core.Sources.ShellLauncher.OpenUrl(AppInfo.RepoUrl);
         }
     }
 }

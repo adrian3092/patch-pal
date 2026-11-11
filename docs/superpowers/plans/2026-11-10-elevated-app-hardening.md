@@ -460,7 +460,7 @@ git commit -m "fix: trust Chocolatey only from an admin-controlled install folde
 - Consumes: `WindowsTools.ExplorerPath` (Task 2).
 - Produces: `public static class ShellLauncher { static void OpenUrl(string url, Action<string, string>? start = null); }` — composes `(WindowsTools.ExplorerPath, "\"<url>\"")` and calls `start` (default: a real `Process.Start(fileName, arguments)` wrapper with `UseShellExecute = false`). Routing through `explorer.exe` makes the shell start the browser at the user's integrity.
 
-- [ ] **Step 1: Write the failing test (RED)**
+- [x] **Step 1: Write the failing test (RED)**
 
 ```csharp
 // ShellLauncherTests.cs
@@ -474,17 +474,17 @@ public void OpenUrl_LaunchesExplorerWithTheQuotedUrl()
 }
 ```
 
-- [ ] **Step 2: Run; verify fail.**
+- [x] **Step 2: Run; verify fail.**
 
-- [ ] **Step 3: Implement `ShellLauncher.OpenUrl`** as described.
+- [x] **Step 3: Implement `ShellLauncher.OpenUrl`** as described.
 
-- [ ] **Step 4: Run; verify pass.**
+- [x] **Step 4: Run; verify pass.**
 
-- [ ] **Step 5: Wire `OnAboutClicked`** — replace the `Process.Start(new ProcessStartInfo(AppInfo.RepoUrl){ UseShellExecute = true })` block with `ShellLauncher.OpenUrl(AppInfo.RepoUrl);`.
+- [x] **Step 5: Wire `OnAboutClicked`** — replace the `Process.Start(new ProcessStartInfo(AppInfo.RepoUrl){ UseShellExecute = true })` block with `ShellLauncher.OpenUrl(AppInfo.RepoUrl);`.
 
-- [ ] **Step 6: Build; run tests.** Run: `dotnet build -c Release -warnaserror` then `dotnet test -warnaserror` → PASS.
+- [x] **Step 6: Build; run tests.** Run: `dotnet build -c Release -warnaserror` then `dotnet test -warnaserror` → PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/PatchPal.Core/Sources/ShellLauncher.cs tests/PatchPal.Core.Tests/Sources/ShellLauncherTests.cs src/PatchPal.App/MainWindow.xaml.cs
