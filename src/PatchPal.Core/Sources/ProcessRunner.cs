@@ -5,6 +5,13 @@ namespace PatchPal.Core.Sources;
 
 public sealed class ProcessRunner : IProcessRunner
 {
+    /// <summary>
+    /// Held around every start that inherits handles. UserProcessLauncher makes its pipe ends
+    /// inheritable for a moment; a redirected Process.Start on another thread in that moment would
+    /// inherit them too, and the de-elevated run's output would never reach end-of-file.
+    /// </summary>
+    internal static readonly object StartLock = new();
+
     public bool CommandExists(string command)
     {
         // v1 used PowerShell's Get-Command, which resolves App Execution Aliases
@@ -20,7 +27,7 @@ public sealed class ProcessRunner : IProcessRunner
                 CreateNoWindow = true,
             };
             ScrubLoaderVars(psi);
-            using var proc = Process.Start(psi);
+            using var proc = StartLocked(psi);
             if (proc is null) return false;
             proc.StandardOutput.ReadToEnd();
             proc.StandardError.ReadToEnd();
@@ -50,7 +57,7 @@ public sealed class ProcessRunner : IProcessRunner
         Process? proc;
         try
         {
-            proc = Process.Start(psi);
+            proc = StartLocked(psi);
         }
         catch (System.ComponentModel.Win32Exception) when (!fileName.Contains('\\') && !fileName.Contains('/'))
         {
@@ -68,12 +75,26 @@ public sealed class ProcessRunner : IProcessRunner
                 StandardErrorEncoding = Encoding.UTF8,
             };
             ScrubLoaderVars(viaCmd);
-            proc = Process.Start(viaCmd);
+            proc = StartLocked(viaCmd);
         }
         if (proc is null) throw new InvalidOperationException($"Failed to start {fileName}");
+        return await CollectAsync(proc, proc.StandardOutput, proc.StandardError, ct);
+    }
+
+    public async Task<ProcessResult> RunAsUserAsync(string fileName, string arguments, CancellationToken ct = default)
+    {
+        // Never falls back to a normal (elevated) start: UserProcessLauncher throws ProcessLaunchException.
+        var started = UserProcessLauncher.Start(fileName, arguments, IsLoaderVar);
+        using var stdOut = started.StdOut;
+        using var stdErr = started.StdErr;
+        return await CollectAsync(started.Process, stdOut, stdErr, ct);
+    }
+
+    private static async Task<ProcessResult> CollectAsync(Process proc, StreamReader stdOutReader, StreamReader stdErrReader, CancellationToken ct)
+    {
         using var _ = proc;
-        var stdOut = proc.StandardOutput.ReadToEndAsync(ct);
-        var stdErr = proc.StandardError.ReadToEndAsync(ct);
+        var stdOut = stdOutReader.ReadToEndAsync(ct);
+        var stdErr = stdErrReader.ReadToEndAsync(ct);
         try
         {
             await proc.WaitForExitAsync(ct);
@@ -117,12 +138,18 @@ public sealed class ProcessRunner : IProcessRunner
     // code into a child process; never hand them to the elevated children we start.
     private static void ScrubLoaderVars(ProcessStartInfo psi)
     {
-        var doomed = psi.Environment.Keys
-            .Where(k => LoaderVarPrefixes.Any(p => k.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
-            .ToList();
+        var doomed = psi.Environment.Keys.Where(IsLoaderVar).ToList();
         foreach (var key in doomed)
             psi.Environment.Remove(key);
     }
+
+    private static Process? StartLocked(ProcessStartInfo psi)
+    {
+        lock (StartLock) return Process.Start(psi);
+    }
+
+    private static bool IsLoaderVar(string name)
+        => LoaderVarPrefixes.Any(p => name.StartsWith(p, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsElevated()
     {

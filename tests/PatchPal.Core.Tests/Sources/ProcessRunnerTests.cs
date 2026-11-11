@@ -57,4 +57,47 @@ public class ProcessRunnerTests
             Environment.SetEnvironmentVariable("DOTNET_STARTUP_HOOKS", null);
         }
     }
+
+    [Fact]
+    public async Task RunAsUserAsync_RunsAndCapturesOutput()
+    {
+        // Non-elevated (CI, dev shell) it runs as the same user; elevated it de-elevates.
+        var result = await new ProcessRunner().RunAsUserAsync(WindowsTools.CmdPath, "/c echo hi & exit 4");
+        Assert.Equal(4, result.ExitCode);
+        Assert.Contains("hi", result.StdOut);
+    }
+
+    [Fact]
+    public async Task RunAsUserAsync_Cancelled_StopsTheProcess()
+    {
+        var marker = Path.Combine(Path.GetTempPath(), $"patchpal-cancel-user-{Guid.NewGuid():N}.txt");
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(300));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => new ProcessRunner().RunAsUserAsync(
+                WindowsTools.CmdPath, $"/c ping -n 3 127.0.0.1 >nul & echo done>\"{marker}\"", cts.Token));
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            Assert.False(File.Exists(marker));
+        }
+        finally { File.Delete(marker); }
+    }
+
+    [Fact]
+    public async Task RunAsUserAsync_PassesTheEnvironmentWithoutLoaderVariables()
+    {
+        Environment.SetEnvironmentVariable("DOTNET_STARTUP_HOOKS", @"C:\x.dll");
+        Environment.SetEnvironmentVariable("PATCHPAL_TEST_KEEP", "kept");
+        try
+        {
+            var r = await new ProcessRunner().RunAsUserAsync(
+                WindowsTools.CmdPath, "/c echo [%DOTNET_STARTUP_HOOKS%] [%PATCHPAL_TEST_KEEP%]");
+            Assert.Contains("[%DOTNET_STARTUP_HOOKS%]", r.StdOut);
+            Assert.Contains("[kept]", r.StdOut);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("DOTNET_STARTUP_HOOKS", null);
+            Environment.SetEnvironmentVariable("PATCHPAL_TEST_KEEP", null);
+        }
+    }
 }

@@ -43,35 +43,35 @@
 **Interfaces:**
 - Produces: a publish folder (`dist/publish-$arch`) containing `PatchPal.exe` and exactly the five native DLLs; the installer and zip carry all six files.
 
-- [ ] **Step 1: Add the build-time settings**
+- [x] **Step 1: Add the build-time settings**
 
 In `PatchPal.App.csproj`, inside the existing `<PropertyGroup>`, add `<StartupHookSupport>false</StartupHookSupport>`. (Single-file publish already leaves native libraries beside the exe once the self-extract flag is gone; no csproj change is needed for that.)
 
-- [ ] **Step 2: Drop the self-extract flag in `release.yml`**
+- [x] **Step 2: Drop the self-extract flag in `release.yml`**
 
 In the "Publish (x64 and arm64)" step, remove `-p:IncludeNativeLibrariesForSelfExtract=true` from the `dotnet publish` line. Keep `-p:PublishSingleFile=true` and `--self-contained`.
 
-- [ ] **Step 3: Add a CI file-check step after publish**
+- [x] **Step 3: Add a CI file-check step after publish**
 
 New step (pwsh) that, for each arch, asserts the set of `*.dll` in `dist/publish-$arch` equals the five expected names — fail (`exit 1`) if any extra DLL appears or any is missing. This catches a new native DLL that would otherwise silently miss setup and the zip. Expected names are the five from Global Constraints.
 
-- [ ] **Step 4: Copy the DLLs in `setup.iss`**
+- [x] **Step 4: Copy the DLLs in `setup.iss`**
 
 In `[Files]`, add one line beside the existing `PatchPal.exe` line:
 `Source: "{#MySourceDir}\*_cor3.dll"; DestDir: "{app}"; Flags: ignoreversion`
 (The zip step in `release.yml` already copies `dist/publish-$arch/*` via the staging folder — confirm it globs the folder, not just `PatchPal.exe`; if it names `PatchPal.exe` explicitly, change it to copy the DLLs too.)
 
-- [ ] **Step 5: Verify the publish locally**
+- [x] **Step 5: Verify the publish locally**
 
 Run: `dotnet publish src/PatchPal.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o <scratchpad>/pub-x64`
 Expected: the folder contains `PatchPal.exe` and exactly the five `*_cor3.dll` files (a `.pdb` may also appear; ignore it). No `%TEMP%\.net\PatchPal` folder is created by publishing.
 
-- [ ] **Step 6: Build and test**
+- [x] **Step 6: Build and test**
 
 Run: `dotnet build -c Release -warnaserror`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/PatchPal.App/PatchPal.App.csproj .github/workflows/release.yml installer/setup.iss
@@ -95,7 +95,7 @@ git commit -m "ci: ship WPF native DLLs beside the exe and off the startup-hook 
 - Produces: `public static class WindowsTools` with `static string WherePath`, `static string CmdPath`, `static string PowerShellPath`, `static string ExplorerPath` — each an absolute path (`WherePath`/`CmdPath`/`PowerShellPath` under `Environment.SystemDirectory`, `PowerShellPath` = `…\WindowsPowerShell\v1.0\powershell.exe`; `ExplorerPath` = `Environment.GetFolderPath(SpecialFolder.Windows)\explorer.exe`). Consumed by Tasks 4 and 6.
 - Produces: a private `ProcessRunner` helper that removes the .NET and .NET-Framework loader variables — every key starting `DOTNET_`, `CORECLR_`, or `COR_` — from a `ProcessStartInfo`'s `Environment`, applied to every child `ProcessRunner` starts. Task 3's `RunAsUserAsync` reuses it (its de-elevated token start must also carry a scrubbed environment).
 
-- [ ] **Step 1: Write the failing test for `WindowsTools`**
+- [x] **Step 1: Write the failing test for `WindowsTools`**
 
 ```csharp
 // WindowsToolsTests.cs
@@ -112,13 +112,13 @@ public void PathsAreAbsoluteUnderSystem32()
 }
 ```
 
-- [ ] **Step 2: Run it; verify it fails** — Run: `dotnet test tests/PatchPal.Core.Tests --filter WindowsToolsTests` → Expected: FAIL (`WindowsTools` not defined).
+- [x] **Step 2: Run it; verify it fails** — Run: `dotnet test tests/PatchPal.Core.Tests --filter WindowsToolsTests` → Expected: FAIL (`WindowsTools` not defined).
 
-- [ ] **Step 3: Implement `WindowsTools`** in the new file. Four expression-bodied static properties as described in Interfaces.
+- [x] **Step 3: Implement `WindowsTools`** in the new file. Four expression-bodied static properties as described in Interfaces.
 
-- [ ] **Step 4: Run it; verify it passes.**
+- [x] **Step 4: Run it; verify it passes.**
 
-- [ ] **Step 5: Write the failing fallback test for `ProcessRunner`**
+- [x] **Step 5: Write the failing fallback test for `ProcessRunner`**
 
 ```csharp
 // ProcessRunnerTests.cs — the RunAsInvoker recipe depends on this fallback.
@@ -134,11 +134,11 @@ public async Task RunAsync_BareNameThatFails_FallsBackToSystem32Cmd()
 ```
 (If this proves awkward to assert deterministically, instead keep `ProcessRunnerTests` green and cover the fallback through the existing winget RunAsInvoker manual recipe; the real guard is Step 6.)
 
-- [ ] **Step 6: Point `ProcessRunner` at the absolute paths**
+- [x] **Step 6: Point `ProcessRunner` at the absolute paths**
 
 In `ProcessRunner.CommandExists`, start `WindowsTools.WherePath` instead of `"where.exe"`. In the `catch (Win32Exception)` fallback in `RunAsync`, start `WindowsTools.CmdPath` instead of `"cmd.exe"`. Leave the trigger (bare `fileName` with no slash) and the `winget` bare-name launch unchanged, so the RunAsInvoker recipe still reaches the fallback.
 
-- [ ] **Step 7: Write the failing env-scrub test (RED)**
+- [x] **Step 7: Write the failing env-scrub test (RED)**
 
 ```csharp
 // ProcessRunnerTests.cs — Patch Pal must not pass loader-injection variables to the
@@ -156,13 +156,13 @@ public async Task RunAsync_RemovesDotnetLoaderVarsFromChildren()
 }
 ```
 
-- [ ] **Step 8: Run it; verify it fails** (the child currently inherits the variable, so the output shows the value, not the literal).
+- [x] **Step 8: Run it; verify it fails** (the child currently inherits the variable, so the output shows the value, not the literal).
 
-- [ ] **Step 9: Implement the scrub**
+- [x] **Step 9: Implement the scrub**
 
 Add a private helper that, given a `ProcessStartInfo`, removes from `psi.Environment` every key whose name starts with `DOTNET_`, `CORECLR_`, or `COR_` (ordinal, case-insensitive). Call it on every `ProcessStartInfo` `ProcessRunner` builds (the direct start, the cmd fallback, and `CommandExists`). Run the test; verify it passes.
 
-- [ ] **Step 10: Lock the DLL search in `Program.Main`**
+- [x] **Step 10: Lock the DLL search in `Program.Main`**
 
 Add a P/Invoke to `Program.cs`:
 ```csharp
@@ -172,12 +172,12 @@ private const uint LOAD_LIBRARY_SEARCH_DEFAULT_DIRS = 0x1000;
 ```
 Call `SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);` as the **first** statement of `Main`, before `CliOptions.Parse(args)`.
 
-- [ ] **Step 11: Build and run the suite**
+- [x] **Step 11: Build and run the suite**
 
 Run: `dotnet build -c Release -warnaserror` then `dotnet test -warnaserror`
 Expected: PASS, including the unchanged `CommandExists_FindsCmd` and the cancel test.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add src/PatchPal.Core/Sources/WindowsTools.cs tests/PatchPal.Core.Tests/Sources/WindowsToolsTests.cs src/PatchPal.Core/Sources/ProcessRunner.cs tests/PatchPal.Core.Tests/Sources/ProcessRunnerTests.cs src/PatchPal.App/Program.cs
@@ -202,13 +202,13 @@ git commit -m "fix: run Windows tools from System32, lock the DLL search, scrub 
 - Produces: `public sealed class ProcessLaunchException : Exception` (message + optional inner).
 - Produces: `FakeProcessRunner.Calls` gains a fourth field `bool AsUser`; `RunAsUserAsync` records `(fileName, arguments, Elevated: false, AsUser: true)`. A settable `Exception? ThrowOnRunAsUser` makes it simulate a launch failure.
 
-- [ ] **Step 0 (SPIKE — throwaway, owner's PC, attended):** Prove the de-elevation mechanism before writing `RunAsUserAsync`. In the scratchpad, build a tiny elevated console app that launches `whoami /all` through the **leading candidate** (a restricted copy of the process token — Administrators and the "local account and member of Administrators" group deny-only, admin privileges removed, integrity lowered to Medium — passed to `CreateProcessAsUser` with redirected pipes). Confirm the five spike checks from spec §3: the child shows Medium IL + Administrators "deny only" + a normal prompt's privileges; files it writes are user-owned; stdout/exit/cancel work; `scoop status`/`scoop update` work (switch Scoop on in Settings for the test, off after); `scoop update` reaches System32 `powershell.exe` by full path. If the leading candidate fails, fall back to `CreateProcessWithTokenW` with the shell's token. Record which approach passed in a comment at the top of `ProcessRunner.RunAsUserAsync`. Delete the spike. **No production code is kept from the spike.**
+- [x] **Step 0 (SPIKE — throwaway, owner's PC, attended):** Prove the de-elevation mechanism before writing `RunAsUserAsync`. In the scratchpad, build a tiny elevated console app that launches `whoami /all` through the **leading candidate** (a restricted copy of the process token — Administrators and the "local account and member of Administrators" group deny-only, admin privileges removed, integrity lowered to Medium — passed to `CreateProcessAsUser` with redirected pipes). Confirm the five spike checks from spec §3: the child shows Medium IL + Administrators "deny only" + a normal prompt's privileges; files it writes are user-owned; stdout/exit/cancel work; `scoop status`/`scoop update` work (switch Scoop on in Settings for the test, off after); `scoop update` reaches System32 `powershell.exe` by full path. If the leading candidate fails, fall back to `CreateProcessWithTokenW` with the shell's token. Record which approach passed in a comment at the top of `ProcessRunner.RunAsUserAsync`. Delete the spike. **No production code is kept from the spike.**
 
-- [ ] **Step 1: Add the interface method and the exception; extend the fake**
+- [x] **Step 1: Add the interface method and the exception; extend the fake**
 
 Add `RunAsUserAsync` to `IProcessRunner` with the summary from Interfaces. Create `ProcessLaunchException`. Extend `FakeProcessRunner`: widen the `Calls` tuple to `(string FileName, string Arguments, bool Elevated, bool AsUser)`, update `RunAsync`/`RunElevatedAsync` to pass `AsUser: false`, add `RunAsUserAsync` (honours a new `ThrowOnRunAsUser`). Build; fix the existing source tests only where the added tuple field forces it (named access keeps compiling).
 
-- [ ] **Step 2: Write the failing behavior test (unit, runner-agnostic)**
+- [x] **Step 2: Write the failing behavior test (unit, runner-agnostic)**
 
 ```csharp
 // ProcessRunnerTests.cs
@@ -222,13 +222,13 @@ public async Task RunAsUserAsync_RunsAndCapturesOutput()
 }
 ```
 
-- [ ] **Step 3: Run it; verify it fails** (method throws `NotImplementedException`/not implemented).
+- [x] **Step 3: Run it; verify it fails** (method throws `NotImplementedException`/not implemented).
 
-- [ ] **Step 4: Implement `RunAsUserAsync`** in `ProcessRunner`, using the approach the spike confirmed. Reuse `RunAsync`'s output-pump and `Kill(entireProcessTree: true)` cancel handling. On any failure to create the de-elevated process, throw `ProcessLaunchException`. **Never** fall back to a non-de-elevated start.
+- [x] **Step 4: Implement `RunAsUserAsync`** in `ProcessRunner`, using the approach the spike confirmed. Reuse `RunAsync`'s output-pump and `Kill(entireProcessTree: true)` cancel handling. On any failure to create the de-elevated process, throw `ProcessLaunchException`. **Never** fall back to a non-de-elevated start.
 
-- [ ] **Step 5: Run it; verify it passes.**
+- [x] **Step 5: Run it; verify it passes.**
 
-- [ ] **Step 6: Add the cancel test (parity with `RunAsync`)**
+- [x] **Step 6: Add the cancel test (parity with `RunAsync`)**
 
 ```csharp
 [Fact]
@@ -247,9 +247,9 @@ public async Task RunAsUserAsync_Cancelled_StopsTheProcess()
 }
 ```
 
-- [ ] **Step 7: Run tests; verify pass.** Run: `dotnet test -warnaserror` → PASS.
+- [x] **Step 7: Run tests; verify pass.** Run: `dotnet test -warnaserror` → PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/PatchPal.Core/Sources/IProcessRunner.cs src/PatchPal.Core/Sources/ProcessLaunchException.cs src/PatchPal.Core/Sources/ProcessRunner.cs tests/PatchPal.Core.Tests/Sources/FakeProcessRunner.cs tests/PatchPal.Core.Tests/Sources/ProcessRunnerTests.cs
