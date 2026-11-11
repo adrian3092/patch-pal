@@ -43,6 +43,29 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - **"Launch Patch Pal" at the end of setup works.** It failed with "CreateProcess failed;
   code 740" because Patch Pal needs administrator rights; it now shows the usual UAC prompt.
 
+### Security
+Patch Pal runs as administrator, so a program running under your normal account could get admin
+rights by changing something Patch Pal loads or runs. Everything it loads or runs while it has
+admin rights now comes from a folder only an administrator can change:
+- WPF's native DLLs ship beside `PatchPal.exe` instead of unpacking into your Temp folder.
+- **Setup always installs for all users, into Program Files.** The "just for me" option is gone.
+  An old per-user copy is removed with its own uninstaller run with your normal rights, never as
+  admin; settings and history are kept. **If a scheduled task or shortcut of yours points at
+  `%LOCALAPPDATA%\Programs\PatchPal\PatchPal.exe`, point it at
+  `%ProgramFiles%\PatchPal\PatchPal.exe` instead.**
+- Scoop runs with your normal rights. Scoop apps installed for all users (`scoop install -g`)
+  must be updated from an admin prompt.
+- Chocolatey is used only from its own install folder, and only when only an administrator can
+  change it; a `choco` found elsewhere on PATH is ignored.
+- Windows tools (PowerShell, cmd, explorer and others) run from System32 by full path, DLLs load
+  only from system folders, and child processes don't inherit .NET's startup-hook and profiler
+  variables.
+- The About box's **Open GitHub** link opens your browser with your normal rights, not as admin.
+
+Accepted limits: winget is still found through PATH, the same way an admin prompt finds it, and
+the .NET runtime reads its startup variables before Patch Pal's own code runs. Chocolatey's
+package scripts run in PowerShell as admin and may load modules from your Documents folder.
+
 ## [2.1.0] - 2026-10-02
 
 ### Changed

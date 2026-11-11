@@ -4,6 +4,8 @@ Patch Pal is signed through the [SignPath Foundation](https://signpath.org) prog
 
 Releases up to v2.0.0 are unsigned.
 
+Only `PatchPal.exe` and the installers need signing. The five WPF native DLLs that ship beside the exe (`*_cor3.dll`) are already signed by Microsoft.
+
 Signing removes the "Unknown publisher" warning from UAC prompts. SmartScreen's "Windows protected your PC" warning fades as signed downloads build reputation; no certificate skips that step any more (EV certificates stopped doing so in August 2024).
 
 ---

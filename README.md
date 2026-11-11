@@ -49,13 +49,15 @@ Download the installer for your architecture from the [latest release](https://g
 - `PatchPal-Setup-x.y.z-x64.exe` — Intel/AMD PCs
 - `PatchPal-Setup-x.y.z-arm64.exe` — ARM PCs (Snapdragon, etc.)
 
-Run it, click through the wizard, launch from the Start menu. Standard Add-or-Remove-Programs uninstall. Installing v2 over an existing v1 install upgrades it in place.
+Run it, approve the administrator prompt, click through the wizard, launch from the Start menu. Setup installs Patch Pal for all users, into Program Files. Standard Add-or-Remove-Programs uninstall. Installing v2 over an existing v1 install upgrades it in place.
+
+Patch Pal runs as administrator, so its files must sit in a folder only an administrator can change; otherwise any program running under your normal account could swap them and get admin rights the next time you open Patch Pal. If you installed 2.1.0 or earlier "just for me" (into `%LOCALAPPDATA%\Programs\PatchPal`), setup removes that copy and keeps your settings and history. If it can't, it says so at the end; remove the old copy from **Settings → Apps → Installed apps**. Setup can't see that copy when a different administrator account approves the prompt; remove it the same way.
 
 ### Portable zip
 
 1. Download `PatchPal-portable-x.y.z-x64.zip` (or `-arm64.zip`).
 2. Right-click the downloaded zip → **Properties** → tick **Unblock** → OK.
-3. Extract anywhere.
+3. Extract the whole folder, keeping `PatchPal.exe` and its DLLs together, somewhere only an administrator can change, such as a new folder under `C:\Program Files`. Not Downloads or the desktop: Patch Pal runs as administrator, and anything your normal account can change there could be swapped to get admin rights. If that's a hassle, use the installer.
 4. Run **`PatchPal.exe`**.
 
 That's it. The first scan takes 5–15 seconds.
@@ -123,10 +125,10 @@ v2 removes `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat` — the install
 
 ## Schedule a daily check
 
-Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the paths to your install location). `-RunLevel Highest` is required — Patch Pal requests administrator rights, and a task without it cannot show the UAC prompt:
+Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the report path; the exe path is where the installer puts it). The task runs as administrator, so it must point at a copy only an administrator can change, such as the one in Program Files, never one in your user folder. `-RunLevel Highest` is required — Patch Pal requests administrator rights, and a task without it cannot show the UAC prompt:
 
 ```powershell
-$action  = New-ScheduledTaskAction -Execute "$env:LOCALAPPDATA\Programs\PatchPal\PatchPal.exe" `
+$action  = New-ScheduledTaskAction -Execute "$env:ProgramFiles\PatchPal\PatchPal.exe" `
     -Argument '--export-html "C:\Tools\PatchPal\latest.html"'
 $trigger = New-ScheduledTaskTrigger -Daily -At 9am
 Register-ScheduledTask -TaskName 'Patch Pal Daily' -Action $action -Trigger $trigger -RunLevel Highest
@@ -184,6 +186,8 @@ Windows installs Edge with Edge's own installer, but winget only has Edge as an 
 
 **Why does it ask for administrator rights at launch?**
 winget and Chocolatey need admin rights to update machine-wide installs. Asking once at startup means no per-update UAC prompts and no flashing console windows — and lets Patch Pal capture each upgrade's output for the History page. Standard-user accounts will need an administrator to approve the prompt.
+
+Scoop is a per-user tool, so Patch Pal runs it with your normal rights, not as admin. Scoop apps installed for all users (`scoop install -g`) need admin to update; Patch Pal won't run Scoop as admin for them, so update those from an admin prompt with `scoop update -g <app>`. Chocolatey is used only when it's installed in a folder only an administrator can change, as its installer sets it up.
 
 ## Verify a release
 

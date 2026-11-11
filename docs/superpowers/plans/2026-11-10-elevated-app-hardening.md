@@ -535,13 +535,13 @@ git commit -m "fix: install Patch Pal for all users and remove an old per-user c
 
 No tests (docs are exempt from the TDD gate).
 
-- [ ] **Step 1: README** — Install: setup asks for admin and installs for all users. Portable zip: keep the whole folder together and extract it somewhere only an admin can change (e.g. under `C:\Program Files`), or use the installer; say why. Schedule a daily check: change the path to `"$env:ProgramFiles\PatchPal\PatchPal.exe"` and say the task must point at a copy only an admin can change.
+- [x] **Step 1: README** — Install: setup asks for admin and installs for all users. Portable zip: keep the whole folder together and extract it somewhere only an admin can change (e.g. under `C:\Program Files`), or use the installer; say why. Schedule a daily check: change the path to `"$env:ProgramFiles\PatchPal\PatchPal.exe"` and say the task must point at a copy only an admin can change.
 
-- [ ] **Step 2: CHANGELOG** — add a `### Security` block under `[Unreleased]` summarising: DLLs beside the exe (no Temp), all-users-only setup, Scoop de-elevated, Chocolatey only from its admin-controlled folder, Windows tools by full path + DLL-search lock, About link de-elevated; name winget and the pre-`Main` runtime load as accepted limits. Add a plain note for "for me only" users who have scheduled tasks to repoint them.
+- [x] **Step 2: CHANGELOG** — add a `### Security` block under `[Unreleased]` summarising: DLLs beside the exe (no Temp), all-users-only setup, Scoop de-elevated, Chocolatey only from its admin-controlled folder, Windows tools by full path + DLL-search lock, About link de-elevated; name winget and the pre-`Main` runtime load as accepted limits. Add a plain note for "for me only" users who have scheduled tasks to repoint them.
 
-- [ ] **Step 3: SIGNING.md** — note Microsoft already signs the five native DLLs, so signing covers only `PatchPal.exe` and the installers.
+- [x] **Step 3: SIGNING.md** — note Microsoft already signs the five native DLLs, so signing covers only `PatchPal.exe` and the installers.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md CHANGELOG.md docs/SIGNING.md
