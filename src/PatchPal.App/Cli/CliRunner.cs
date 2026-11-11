@@ -28,7 +28,7 @@ public static class CliRunner
         catch (IOException) { /* no console handle — keep default */ }
 
         var runner = new ProcessRunner();
-        var sources = new IPackageSource[] { new WingetSource(runner), new ScoopSource(runner), new ChocoSource(runner) };
+        var sources = new IPackageSource[] { new WingetSource(runner), new ScoopSource(runner), new ChocoSource(runner, new ChocolateyLocator()) };
         return RunAsync(options, new ScanService(new RegistryScanner(), sources),
             () => new SettingsStore().Load(), Console.Out, Console.Error);
     }

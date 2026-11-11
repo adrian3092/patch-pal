@@ -13,7 +13,7 @@ public class BatchUpgradeRunnerTests : IDisposable
     private (BatchUpgradeRunner Batch, FakeProcessRunner Fake, HistoryStore History) Setup()
     {
         var fake = new FakeProcessRunner();
-        var runner = new UpgradeRunner([new WingetSource(fake), new ScoopSource(fake), new ChocoSource(fake)]);
+        var runner = new UpgradeRunner([new WingetSource(fake), new ScoopSource(fake), new ChocoSource(fake, FakeChocolateyLocator.Installed)]);
         var history = new HistoryStore(_dir.FullName);
         return (new BatchUpgradeRunner(runner, history), fake, history);
     }
@@ -26,7 +26,7 @@ public class BatchUpgradeRunnerTests : IDisposable
         var notAFolder = Path.Combine(_dir.FullName, "not-a-folder");
         File.WriteAllText(notAFolder, "");
         var fake = new FakeProcessRunner();
-        var runner = new UpgradeRunner([new WingetSource(fake), new ScoopSource(fake), new ChocoSource(fake)]);
+        var runner = new UpgradeRunner([new WingetSource(fake), new ScoopSource(fake), new ChocoSource(fake, FakeChocolateyLocator.Installed)]);
         return (new BatchUpgradeRunner(runner, new HistoryStore(Path.Combine(notAFolder, "PatchPal"))), fake);
     }
 

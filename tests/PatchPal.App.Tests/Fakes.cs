@@ -33,14 +33,16 @@ public sealed class FakeRunner : IProcessRunner
 
     public bool CommandExists(string command) => true;
 
-    public async Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken ct = default)
+    public async Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken ct = default,
+        IReadOnlyDictionary<string, string?>? environment = null)
     {
         Calls.Add((fileName, arguments, false));
         if (ListGate is not null) await ListGate.Task.WaitAsync(ct);
         return new ProcessResult(ExitCode, ListOutput, "");
     }
 
-    public async Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default)
+    public async Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default,
+        IReadOnlyDictionary<string, string?>? environment = null)
     {
         Calls.Add((fileName, arguments, true));
         if (UpgradeGate is not null) await UpgradeGate.Task;
@@ -49,4 +51,14 @@ public sealed class FakeRunner : IProcessRunner
 
     public Task<ProcessResult> RunAsUserAsync(string fileName, string arguments, CancellationToken ct = default)
         => RunAsync(fileName, arguments, ct);
+}
+
+public sealed class FakeChocoLocator : IChocolateyLocator
+{
+    /// <summary>Chocolatey found in a trusted folder.</summary>
+    public static FakeChocoLocator Installed { get; } = new();
+
+    public string InstallDirectory => @"C:\ProgramData\chocolatey";
+
+    public string? ChocoExePath => @"C:\ProgramData\chocolatey\bin\choco.exe";
 }

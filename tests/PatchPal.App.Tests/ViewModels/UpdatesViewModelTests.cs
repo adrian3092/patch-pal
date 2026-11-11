@@ -19,7 +19,7 @@ public class UpdatesViewModelTests : IDisposable
     {
         // choco reports one outdated package that matches one installed program.
         var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
-        var sources = new IPackageSource[] { new ChocoSource(runner) };
+        var sources = new IPackageSource[] { new ChocoSource(runner, FakeChocoLocator.Installed) };
         var scan = new ScanService(
             new FakePrograms(new InstalledProgram("7zip", "23.01", "Igor Pavlov"),
                              new InstalledProgram("Notepad++", "8.6", "Don Ho")),
@@ -84,7 +84,7 @@ public class UpdatesViewModelTests : IDisposable
         // The update itself worked; only its History entry couldn't be written. That used to
         // end the batch with an exception the app didn't handle.
         var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
-        var sources = new IPackageSource[] { new ChocoSource(runner) };
+        var sources = new IPackageSource[] { new ChocoSource(runner, FakeChocoLocator.Installed) };
         var notAFolder = Path.Combine(_dir.FullName, "not-a-folder");
         File.WriteAllText(notAFolder, "");
         var vm = new UpdatesViewModel(
@@ -183,7 +183,7 @@ public class UpdatesViewModelTests : IDisposable
     [Fact]
     public async Task EmptyState_WhenEverySourceAnswered_SaysEverythingIsUpToDate()
     {
-        var choco = new ChocoSource(new FakeRunner());              // nothing outdated
+        var choco = new ChocoSource(new FakeRunner(), FakeChocoLocator.Installed);              // nothing outdated
         var scan = new ScanService(new FakePrograms(), [choco]);
         var vm = new UpdatesViewModel(scan,
             new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
@@ -256,7 +256,7 @@ public class UpdatesViewModelTests : IDisposable
 
     private UpdatesViewModel ScanOnlyViewModel(FakeRunner runner, ManualClock clock)
     {
-        var choco = new ChocoSource(runner);
+        var choco = new ChocoSource(runner, FakeChocoLocator.Installed);
         return new UpdatesViewModel(new ScanService(new FakePrograms(), [choco]),
             new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
             new ScanState(), () => new AppSettings(), clock);
@@ -323,7 +323,7 @@ public class UpdatesViewModelTests : IDisposable
         // The Updates page stays alive across navigation, so it mustn't keep the settings it
         // was created with: a source switched off on the Settings page meanwhile is skipped.
         var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
-        var choco = new ChocoSource(runner);
+        var choco = new ChocoSource(runner, FakeChocoLocator.Installed);
         var settings = new AppSettings();
         var vm = new UpdatesViewModel(new ScanService(new FakePrograms(), [choco]),
             new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
@@ -339,7 +339,7 @@ public class UpdatesViewModelTests : IDisposable
     public async Task Scan_SkipsSourcesSwitchedOffInSettings()
     {
         var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
-        var choco = new ChocoSource(runner);
+        var choco = new ChocoSource(runner, FakeChocoLocator.Installed);
         var scan = new ScanService(new FakePrograms(new InstalledProgram("7zip", "23.01", "Igor Pavlov")), [choco]);
         var vm = new UpdatesViewModel(scan,
             new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
@@ -355,7 +355,7 @@ public class UpdatesViewModelTests : IDisposable
     public async Task Scan_EverySourceSwitchedOff_AsksNoneAndSaysSo()
     {
         var runner = new FakeRunner { ListOutput = "7zip|23.01|24.08|false\n" };
-        var choco = new ChocoSource(runner);
+        var choco = new ChocoSource(runner, FakeChocoLocator.Installed);
         var vm = new UpdatesViewModel(new ScanService(new FakePrograms(), [choco]),
             new BatchUpgradeRunner(new UpgradeRunner([choco]), new HistoryStore(_dir.FullName)),
             new ScanState(), new AppSettings { DisabledSources = ["winget", "scoop", "chocolatey"] });

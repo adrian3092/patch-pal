@@ -40,7 +40,8 @@ public sealed class ProcessRunner : IProcessRunner
         }
     }
 
-    public async Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken ct = default)
+    public async Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken ct = default,
+        IReadOnlyDictionary<string, string?>? environment = null)
     {
         var psi = new ProcessStartInfo(fileName, arguments)
         {
@@ -53,6 +54,7 @@ public sealed class ProcessRunner : IProcessRunner
         };
 
         ScrubLoaderVars(psi);
+        ApplyEnvironment(psi, environment);
 
         Process? proc;
         try
@@ -75,6 +77,7 @@ public sealed class ProcessRunner : IProcessRunner
                 StandardErrorEncoding = Encoding.UTF8,
             };
             ScrubLoaderVars(viaCmd);
+            ApplyEnvironment(viaCmd, environment);
             proc = StartLocked(viaCmd);
         }
         if (proc is null) throw new InvalidOperationException($"Failed to start {fileName}");
@@ -113,12 +116,19 @@ public sealed class ProcessRunner : IProcessRunner
         return new ProcessResult(proc.ExitCode, await stdOut, await stdErr);
     }
 
-    public async Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default)
+    public async Task<ProcessResult> RunElevatedAsync(string fileName, string arguments, CancellationToken ct = default,
+        IReadOnlyDictionary<string, string?>? environment = null)
     {
         // Already elevated (the app manifest requests admin at launch): run directly,
         // which redirects output for the history log and opens no console window.
         if (IsElevated())
-            return await RunAsync(fileName, arguments, ct);
+            return await RunAsync(fileName, arguments, ct, environment);
+
+        // ShellExecute ignores ProcessStartInfo.Environment. A caller that needs a controlled
+        // environment must not get an elevated child without it.
+        if (environment is not null)
+            throw new ProcessLaunchException(
+                $"Couldn't start {Path.GetFileName(fileName)} with admin rights and a controlled environment; run Patch Pal as administrator.");
 
         var psi = new ProcessStartInfo(fileName, arguments)
         {
@@ -141,6 +151,16 @@ public sealed class ProcessRunner : IProcessRunner
         var doomed = psi.Environment.Keys.Where(IsLoaderVar).ToList();
         foreach (var key in doomed)
             psi.Environment.Remove(key);
+    }
+
+    private static void ApplyEnvironment(ProcessStartInfo psi, IReadOnlyDictionary<string, string?>? environment)
+    {
+        if (environment is null) return;
+        foreach (var (name, value) in environment)
+        {
+            if (value is null) psi.Environment.Remove(name);
+            else psi.Environment[name] = value;
+        }
     }
 
     private static Process? StartLocked(ProcessStartInfo psi)

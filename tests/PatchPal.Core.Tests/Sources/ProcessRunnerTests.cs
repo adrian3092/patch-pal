@@ -100,4 +100,47 @@ public class ProcessRunnerTests
             Environment.SetEnvironmentVariable("PATCHPAL_TEST_KEEP", null);
         }
     }
+
+    [Fact]
+    public async Task RunAsync_EnvironmentOverrides_SetAndRemoveVariables()
+    {
+        Environment.SetEnvironmentVariable("PATCHPAL_TEST_DROP", "inherited");
+        try
+        {
+            var r = await new ProcessRunner().RunAsync(WindowsTools.CmdPath,
+                "/c echo [%PATCHPAL_TEST_SET%] [%PATCHPAL_TEST_DROP%]", default,
+                new Dictionary<string, string?> { ["PATCHPAL_TEST_SET"] = "forced", ["PATCHPAL_TEST_DROP"] = null });
+            Assert.Contains("[forced]", r.StdOut);
+            Assert.Contains("[%PATCHPAL_TEST_DROP%]", r.StdOut);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATCHPAL_TEST_DROP", null);
+        }
+    }
+
+    [Fact]
+    public async Task RunElevatedAsync_WithAnEnvironment_NeverStartsWithoutIt()
+    {
+        // Elevated (the shipped case) it runs directly with the overrides applied; not elevated it
+        // would need a UAC prompt, which can't carry them, so it refuses rather than start without.
+        var env = new Dictionary<string, string?> { ["PATCHPAL_TEST_SET"] = "forced" };
+        if (IsElevated())
+        {
+            var r = await new ProcessRunner().RunElevatedAsync(WindowsTools.CmdPath, "/c echo [%PATCHPAL_TEST_SET%]", default, env);
+            Assert.Contains("[forced]", r.StdOut);
+        }
+        else
+        {
+            await Assert.ThrowsAsync<ProcessLaunchException>(() =>
+                new ProcessRunner().RunElevatedAsync(WindowsTools.CmdPath, "/c exit 0", default, env));
+        }
+    }
+
+    private static bool IsElevated()
+    {
+        using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+        return new System.Security.Principal.WindowsPrincipal(identity)
+            .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+    }
 }
