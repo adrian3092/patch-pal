@@ -46,4 +46,7 @@ public sealed class FakeRunner : IProcessRunner
         if (UpgradeGate is not null) await UpgradeGate.Task;
         return new ProcessResult(ExitCode, "", "");
     }
+
+    public Task<ProcessResult> RunAsUserAsync(string fileName, string arguments, CancellationToken ct = default)
+        => RunAsync(fileName, arguments, ct);
 }
