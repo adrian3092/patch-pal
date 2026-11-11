@@ -270,7 +270,7 @@ git commit -m "feat: add a de-elevated process launch to ProcessRunner"
 - Consumes: `IProcessRunner.RunAsUserAsync` (Task 3); `WindowsTools.PowerShellPath` (Task 2); `ProcessLaunchException` (Task 3).
 - Produces: `ScoopSource` that queries and updates through `RunAsUserAsync`, never `RunAsync`/`RunElevatedAsync`.
 
-- [ ] **Step 1: Update the existing scoop-upgrade test (RED)**
+- [x] **Step 1: Update the existing scoop-upgrade test (RED)**
 
 Change `Scoop_Upgrade_RunsAsCurrentUserThroughPowerShell` to expect the System32 PowerShell path and the AsUser launch:
 ```csharp
@@ -281,7 +281,7 @@ Assert.True(call.AsUser);
 Assert.False(call.Elevated);
 ```
 
-- [ ] **Step 2: Add the scan-path and failure tests (RED)**
+- [x] **Step 2: Add the scan-path and failure tests (RED)**
 
 ```csharp
 [Fact]
@@ -306,15 +306,15 @@ public async Task Scoop_WhenTheDeElevatedLaunchFails_WarnsAndDoesNotRunElevated(
 }
 ```
 
-- [ ] **Step 3: Run; verify all three fail.**
+- [x] **Step 3: Run; verify all three fail.**
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 In `ScoopSource`: `ListOutdatedAsync` calls `runner.RunAsUserAsync("scoop", "status", ct)`, and wraps a `ProcessLaunchException` as `throw new InvalidOperationException("Couldn't start Scoop without admin rights, so its updates weren't checked.")`. `RunUpgradeAsync` calls `runner.RunAsUserAsync(WindowsTools.PowerShellPath, $"-NoProfile -Command \"scoop update {packageId}\"", ct)`, and on `ProcessLaunchException` returns `new ProcessResult(-1, "", "Couldn't start Scoop without admin rights; run 'scoop update " + packageId + "' from a normal prompt yourself.")`. Replace the stale "no elevation" comment with one that says the launch is de-elevated and why. Keep the `PackageIdValidator` note.
 
-- [ ] **Step 5: Run tests; verify pass** (including the untouched `IsInstalled_ChecksTheRightExecutable`).
+- [x] **Step 5: Run tests; verify pass** (including the untouched `IsInstalled_ChecksTheRightExecutable`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/PatchPal.Core/Sources/ScoopSource.cs tests/PatchPal.Core.Tests/Sources/PackageSourceTests.cs

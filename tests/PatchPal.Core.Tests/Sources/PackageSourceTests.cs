@@ -46,9 +46,43 @@ public class PackageSourceTests
         var runner = new FakeProcessRunner();
         await new ScoopSource(runner).RunUpgradeAsync("extras-app_name");
         var call = Assert.Single(runner.Calls);
-        Assert.Equal("powershell", call.FileName);
+        Assert.Equal(WindowsTools.PowerShellPath, call.FileName);
         Assert.Equal("-NoProfile -Command \"scoop update extras-app_name\"", call.Arguments);
+        Assert.True(call.AsUser);
         Assert.False(call.Elevated);
+    }
+
+    [Fact]
+    public async Task Scoop_Status_RunsDeElevatedThroughSystemPowerShell()
+    {
+        var runner = new FakeProcessRunner { StdOut = "" };
+        await new ScoopSource(runner).ListOutdatedAsync();
+        var call = Assert.Single(runner.Calls);
+        Assert.Equal(WindowsTools.PowerShellPath, call.FileName);
+        Assert.Equal("-NoProfile -Command \"scoop status\"", call.Arguments);
+        Assert.True(call.AsUser);
+        Assert.False(call.Elevated);
+    }
+
+    [Fact]
+    public async Task Scoop_WhenTheDeElevatedLaunchFails_WarnsAndDoesNotRunElevated()
+    {
+        var runner = new FakeProcessRunner { ThrowOnRunAsUser = new ProcessLaunchException("no") };
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => new ScoopSource(runner).ListOutdatedAsync());
+        Assert.Contains("without admin", ex.Message);
+        Assert.Empty(runner.Calls);                              // never fell back to another launch
+    }
+
+    [Fact]
+    public async Task Scoop_UpgradeWhenTheDeElevatedLaunchFails_FailsClearlyAndDoesNotRunElevated()
+    {
+        var runner = new FakeProcessRunner { ThrowOnRunAsUser = new ProcessLaunchException("no") };
+        var result = await new ScoopSource(runner).RunUpgradeAsync("git");
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("without admin rights", result.StdErr);
+        Assert.Contains("scoop update git", result.StdErr);
+        Assert.Empty(runner.Calls);
     }
 
     [Fact]
