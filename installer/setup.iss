@@ -40,7 +40,52 @@ SolidCompression=yes
 SetupIconFile=..\src\PatchPal.App\PatchPal.ico
 WizardStyle=modern
 ; Always all users, into Program Files: Patch Pal runs as admin, so its files must sit in a folder
-; only an admin can change. A per-user copy left by 2.1.0 or earlier is removed in [Code]
+; only an admin can change. A per-user copy left by 2.1.0 or earlier is removed by the code below.
+PrivilegesRequired=admin
+#if MyAppArch == "arm64"
+ArchitecturesAllowed=arm64
+ArchitecturesInstallIn64BitMode=arm64
+#else
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+#endif
+UninstallDisplayName={#MyAppName} {#MyAppVersion}
+UninstallDisplayIcon={app}\{#MyAppExeName}
+VersionInfoVersion={#MyAppVersion}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
+
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
+[Files]
+Source: "{#MySourceDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MySourceDir}\*_cor3.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\README.md";    DestDir: "{app}"; Flags: ignoreversion
+Source: "..\LICENSE";      DestDir: "{app}"; Flags: ignoreversion
+Source: "..\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
+
+[InstallDelete]
+; Purge v1 (PowerShell) files when upgrading an existing install.
+Type: files; Name: "{app}\UpdateChecker.ps1"
+Type: files; Name: "{app}\Run.bat"
+Type: files; Name: "{app}\Run-Console.bat"
+
+[Icons]
+Name: "{autoprograms}\{#MyAppName}";            Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
+Name: "{autoprograms}\Uninstall {#MyAppName}";  Filename: "{uninstallexe}"
+Name: "{autodesktop}\{#MyAppName}";             Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+
+[Run]
+; Patch Pal asks for administrator rights, which only ShellExecute can prompt for: a plain
+; CreateProcess of it fails with error 740 ("The requested operation requires elevation").
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent shellexec
+
+[Code]
 const
   // Where 2.1.0 and earlier registered a per-user ("just for me") install. Same AppId as above.
   OldPerUserKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{60cbe8cd-e316-4bc8-9a92-96305ec2c7d2}_is1';
