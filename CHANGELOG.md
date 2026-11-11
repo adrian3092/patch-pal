@@ -6,6 +6,8 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-11
+
 ### Fixed
 - **Update history can no longer be wiped.** If another program had `history.json` open
   when an update finished, Patch Pal read the history as empty and saved just the new entry
