@@ -19,7 +19,7 @@
 - Commit straight to `main`, one commit per task. Do **not** push and do **not** release. Commit messages are conventional (`feat:`/`fix:`/`docs:`/`ci:`), no `Co-Authored-By` trailer (matches history).
 - The five native DLLs are exactly: `D3DCompiler_47_cor3.dll`, `PenImc_cor3.dll`, `PresentationNative_cor3.dll`, `vcruntime140_cor3.dll`, `wpfgfx_cor3.dll`.
 - The old per-user install key (v1 and v2 share the AppId): `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{60cbe8cd-e316-4bc8-9a92-96305ec2c7d2}_is1`.
-- Anti-goals (any one makes the work a failure): never run Scoop — or anything — as admin because the de-elevated launch failed; never break the in-place upgrade or lose `%APPDATA%\PatchPal` settings/history; never add a UAC prompt; never run the old per-user uninstaller elevated; never break the GUI test recipe (`__COMPAT_LAYER=RunAsInvoker` + a fake `winget.cmd` first on PATH → the cmd fallback must still find it).
+- Anti-goals (any one makes the work a failure): never run Scoop, or anything, as admin because the de-elevated launch failed; never break the in-place upgrade or lose `%APPDATA%\PatchPal` settings/history; never add a UAC prompt; never run the old per-user uninstaller elevated; never break the GUI test recipe (`__COMPAT_LAYER=RunAsInvoker` + a fake `winget.cmd` first on PATH → the cmd fallback must still find it).
 - Checks that need Patch Pal running as admin, and the four installer cases, run on the owner's PC in an attended session. Nothing is pushed; installer builds use `release.yml`'s `workflow_dispatch`.
 
 ## Review Focus
@@ -53,13 +53,13 @@ In the "Publish (x64 and arm64)" step, remove `-p:IncludeNativeLibrariesForSelfE
 
 - [x] **Step 3: Add a CI file-check step after publish**
 
-New step (pwsh) that, for each arch, asserts the set of `*.dll` in `dist/publish-$arch` equals the five expected names — fail (`exit 1`) if any extra DLL appears or any is missing. This catches a new native DLL that would otherwise silently miss setup and the zip. Expected names are the five from Global Constraints.
+New step (pwsh) that, for each arch, asserts the set of `*.dll` in `dist/publish-$arch` equals the five expected names; fail (`exit 1`) if any extra DLL appears or any is missing. This catches a new native DLL that would otherwise silently miss setup and the zip. Expected names are the five from Global Constraints.
 
 - [x] **Step 4: Copy the DLLs in `setup.iss`**
 
 In `[Files]`, add one line beside the existing `PatchPal.exe` line:
 `Source: "{#MySourceDir}\*_cor3.dll"; DestDir: "{app}"; Flags: ignoreversion`
-(The zip step in `release.yml` already copies `dist/publish-$arch/*` via the staging folder — confirm it globs the folder, not just `PatchPal.exe`; if it names `PatchPal.exe` explicitly, change it to copy the DLLs too.)
+(The zip step in `release.yml` already copies `dist/publish-$arch/*` via the staging folder; confirm it globs the folder, not just `PatchPal.exe`; if it names `PatchPal.exe` explicitly, change it to copy the DLLs too.)
 
 - [x] **Step 5: Verify the publish locally**
 
@@ -92,8 +92,8 @@ git commit -m "ci: ship WPF native DLLs beside the exe and off the startup-hook 
 - Test: `tests/PatchPal.Core.Tests/Sources/ProcessRunnerTests.cs` (fallback test + env-scrub test)
 
 **Interfaces:**
-- Produces: `public static class WindowsTools` with `static string WherePath`, `static string CmdPath`, `static string PowerShellPath`, `static string ExplorerPath` — each an absolute path (`WherePath`/`CmdPath`/`PowerShellPath` under `Environment.SystemDirectory`, `PowerShellPath` = `…\WindowsPowerShell\v1.0\powershell.exe`; `ExplorerPath` = `Environment.GetFolderPath(SpecialFolder.Windows)\explorer.exe`). Consumed by Tasks 4 and 6.
-- Produces: a private `ProcessRunner` helper that removes the .NET and .NET-Framework loader variables — every key starting `DOTNET_`, `CORECLR_`, or `COR_` — from a `ProcessStartInfo`'s `Environment`, applied to every child `ProcessRunner` starts. Task 3's `RunAsUserAsync` reuses it (its de-elevated token start must also carry a scrubbed environment).
+- Produces: `public static class WindowsTools` with `static string WherePath`, `static string CmdPath`, `static string PowerShellPath`, `static string ExplorerPath`: each an absolute path (`WherePath`/`CmdPath`/`PowerShellPath` under `Environment.SystemDirectory`, `PowerShellPath` = `…\WindowsPowerShell\v1.0\powershell.exe`; `ExplorerPath` = `Environment.GetFolderPath(SpecialFolder.Windows)\explorer.exe`). Consumed by Tasks 4 and 6.
+- Produces: a private `ProcessRunner` helper that removes the .NET and .NET-Framework loader variables, every key starting `DOTNET_`, `CORECLR_`, or `COR_`, from a `ProcessStartInfo`'s `Environment`, applied to every child `ProcessRunner` starts. Task 3's `RunAsUserAsync` reuses it (its de-elevated token start must also carry a scrubbed environment).
 
 - [x] **Step 1: Write the failing test for `WindowsTools`**
 
@@ -112,7 +112,7 @@ public void PathsAreAbsoluteUnderSystem32()
 }
 ```
 
-- [x] **Step 2: Run it; verify it fails** — Run: `dotnet test tests/PatchPal.Core.Tests --filter WindowsToolsTests` → Expected: FAIL (`WindowsTools` not defined).
+- [x] **Step 2: Run it; verify it fails**: Run: `dotnet test tests/PatchPal.Core.Tests --filter WindowsToolsTests` → Expected: FAIL (`WindowsTools` not defined).
 
 - [x] **Step 3: Implement `WindowsTools`** in the new file. Four expression-bodied static properties as described in Interfaces.
 
@@ -121,7 +121,7 @@ public void PathsAreAbsoluteUnderSystem32()
 - [x] **Step 5: Write the failing fallback test for `ProcessRunner`**
 
 ```csharp
-// ProcessRunnerTests.cs — the RunAsInvoker recipe depends on this fallback.
+// ProcessRunnerTests.cs; the RunAsInvoker recipe depends on this fallback.
 [Fact]
 public async Task RunAsync_BareNameThatFails_FallsBackToSystem32Cmd()
 {
@@ -141,7 +141,7 @@ In `ProcessRunner.CommandExists`, start `WindowsTools.WherePath` instead of `"wh
 - [x] **Step 7: Write the failing env-scrub test (RED)**
 
 ```csharp
-// ProcessRunnerTests.cs — Patch Pal must not pass loader-injection variables to the
+// ProcessRunnerTests.cs; Patch Pal must not pass loader-injection variables to the
 // (elevated) children it starts. cmd prints an unset var as its literal %NAME% text.
 [Fact]
 public async Task RunAsync_RemovesDotnetLoaderVarsFromChildren()
@@ -198,11 +198,11 @@ git commit -m "fix: run Windows tools from System32, lock the DLL search, scrub 
 - Test: `tests/PatchPal.Core.Tests/Sources/ProcessRunnerTests.cs`
 
 **Interfaces:**
-- Produces: `Task<ProcessResult> RunAsUserAsync(string fileName, string arguments, CancellationToken ct = default)` on `IProcessRunner` — starts the process with the user's normal rights (Medium integrity, Administrators deny-only), redirects stdout/stderr, and kills the whole tree on cancel, exactly like `RunAsync`. Throws `ProcessLaunchException` when it cannot create the de-elevated process. Consumed by Task 4.
+- Produces: `Task<ProcessResult> RunAsUserAsync(string fileName, string arguments, CancellationToken ct = default)` on `IProcessRunner`: starts the process with the user's normal rights (Medium integrity, Administrators deny-only), redirects stdout/stderr, and kills the whole tree on cancel, exactly like `RunAsync`. Throws `ProcessLaunchException` when it cannot create the de-elevated process. Consumed by Task 4.
 - Produces: `public sealed class ProcessLaunchException : Exception` (message + optional inner).
 - Produces: `FakeProcessRunner.Calls` gains a fourth field `bool AsUser`; `RunAsUserAsync` records `(fileName, arguments, Elevated: false, AsUser: true)`. A settable `Exception? ThrowOnRunAsUser` makes it simulate a launch failure.
 
-- [x] **Step 0 (SPIKE — throwaway, owner's PC, attended):** Prove the de-elevation mechanism before writing `RunAsUserAsync`. In the scratchpad, build a tiny elevated console app that launches `whoami /all` through the **leading candidate** (a restricted copy of the process token — Administrators and the "local account and member of Administrators" group deny-only, admin privileges removed, integrity lowered to Medium — passed to `CreateProcessAsUser` with redirected pipes). Confirm the five spike checks from spec §3: the child shows Medium IL + Administrators "deny only" + a normal prompt's privileges; files it writes are user-owned; stdout/exit/cancel work; `scoop status`/`scoop update` work (switch Scoop on in Settings for the test, off after); `scoop update` reaches System32 `powershell.exe` by full path. If the leading candidate fails, fall back to `CreateProcessWithTokenW` with the shell's token. Record which approach passed in a comment at the top of `ProcessRunner.RunAsUserAsync`. Delete the spike. **No production code is kept from the spike.**
+- [x] **Step 0 (SPIKE; throwaway, owner's PC, attended):** Prove the de-elevation mechanism before writing `RunAsUserAsync`. In the scratchpad, build a tiny elevated console app that launches `whoami /all` through the **leading candidate** (a restricted copy of the process token; Administrators and the "local account and member of Administrators" group deny-only, admin privileges removed, integrity lowered to Medium; passed to `CreateProcessAsUser` with redirected pipes). Confirm the five spike checks from spec §3: the child shows Medium IL + Administrators "deny only" + a normal prompt's privileges; files it writes are user-owned; stdout/exit/cancel work; `scoop status`/`scoop update` work (switch Scoop on in Settings for the test, off after); `scoop update` reaches System32 `powershell.exe` by full path. If the leading candidate fails, fall back to `CreateProcessWithTokenW` with the shell's token. Record which approach passed in a comment at the top of `ProcessRunner.RunAsUserAsync`. Delete the spike. **No production code is kept from the spike.**
 
 - [x] **Step 1: Add the interface method and the exception; extend the fake**
 
@@ -337,10 +337,10 @@ git commit -m "fix: run Scoop with the user's normal rights, not as admin"
 - Test: `tests/PatchPal.Core.Tests/Sources/PackageSourceTests.cs`
 
 **Interfaces:**
-- Produces: `public interface IChocolateyLocator { string? ChocoExePath { get; } }` — the full path to `choco.exe` only when its folder is admin-controlled, else `null`.
-- Produces: `public interface IDirectoryTrust { bool IsAdminOnly(string path); }` — true when no normal account can change `path`.
+- Produces: `public interface IChocolateyLocator { string? ChocoExePath { get; } }`: the full path to `choco.exe` only when its folder is admin-controlled, else `null`.
+- Produces: `public interface IDirectoryTrust { bool IsAdminOnly(string path); }`: true when no normal account can change `path`.
 - Produces: `ChocolateyLocator(IDirectoryTrust trust, Func<string?> readMachineChocolateyInstall)` and `DirectoryTrust : IDirectoryTrust` (production ACL/owner check).
-- Consumes (ChocoSource): `IChocolateyLocator`; `IProcessRunner` (unchanged, still `RunElevatedAsync` for upgrades — choco is a machine tool).
+- Consumes (ChocoSource): `IChocolateyLocator`; `IProcessRunner` (unchanged, still `RunElevatedAsync` for upgrades; choco is a machine tool).
 
 - [x] **Step 1: Write failing locator tests (RED)**
 
@@ -376,7 +376,7 @@ public void MissingValue_FallsBackToCommonAppDataChocolatey()
 
 - [x] **Step 2: Run; verify fail.**
 
-- [x] **Step 3: Implement `ChocolateyLocator`** — resolve the install dir from `readMachineChocolateyInstall()` or, when null/empty, `Path.Combine(Environment.GetFolderPath(SpecialFolder.CommonApplicationData), "chocolatey")`. Build `<dir>\bin\choco.exe`. Return it only if `File.Exists(path) && trust.IsAdminOnly(dir)`, else `null`.
+- [x] **Step 3: Implement `ChocolateyLocator`**: resolve the install dir from `readMachineChocolateyInstall()` or, when null/empty, `Path.Combine(Environment.GetFolderPath(SpecialFolder.CommonApplicationData), "chocolatey")`. Build `<dir>\bin\choco.exe`. Return it only if `File.Exists(path) && trust.IsAdminOnly(dir)`, else `null`.
 
 - [x] **Step 4a: Write the failing `DirectoryTrust` test (RED)**
 
@@ -400,9 +400,9 @@ public void MissingDir_IsNotAdminOnly()
 ```
 Run it; verify it fails (`DirectoryTrust` not defined).
 
-- [x] **Step 4b: Implement `DirectoryTrust.IsAdminOnly`** — using `DirectoryInfo.GetAccessControl()`, return false if any writable right (Write/CreateFiles/CreateDirectories/Modify/FullControl, allow) is granted to a non-admin principal (anyone other than SYSTEM, Administrators, TrustedInstaller, the admin-owned built-ins); return false when the directory is missing or the ACL can't be read. Keep it small and conservative: unknown → not trusted. Run the Step 4a tests; verify pass.
+- [x] **Step 4b: Implement `DirectoryTrust.IsAdminOnly`**: using `DirectoryInfo.GetAccessControl()`, return false if any writable right (Write/CreateFiles/CreateDirectories/Modify/FullControl, allow) is granted to a non-admin principal (anyone other than SYSTEM, Administrators, TrustedInstaller, the admin-owned built-ins); return false when the directory is missing or the ACL can't be read. Keep it small and conservative: unknown → not trusted. Run the Step 4a tests; verify pass.
 
-- [x] **Step 5: Add the production machine-registry reader** — a small static `ChocolateyLocator.ReadMachineChocolateyInstall()` that reads `ChocolateyInstall` from `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment` via `Microsoft.Win32.Registry` (not the process environment). Used by a convenience constructor `ChocolateyLocator()` that wires `new DirectoryTrust()` + this reader.
+- [x] **Step 5: Add the production machine-registry reader**: a small static `ChocolateyLocator.ReadMachineChocolateyInstall()` that reads `ChocolateyInstall` from `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment` via `Microsoft.Win32.Registry` (not the process environment). Used by a convenience constructor `ChocolateyLocator()` that wires `new DirectoryTrust()` + this reader.
 
 - [x] **Step 6: Write failing `ChocoSource` tests (RED)**
 
@@ -434,7 +434,7 @@ public async Task Choco_Upgrade_RunsTheTrustedChocoExeElevated()
 
 - [x] **Step 8: Change `ChocoSource`** to `ChocoSource(IProcessRunner runner, IChocolateyLocator locator)`: `IsInstalled()` → `locator.ChocoExePath is not null`; `ListOutdatedAsync`/`RunUpgradeAsync` use `locator.ChocoExePath!` as the filename instead of `"choco"`. Update the `IsInstalled_ChecksTheRightExecutable` theory: choco's branch now constructs `new ChocoSource(runner, new FakeLocator(@"...\choco.exe"))`, and the `ExecutableName`-equals-`choco` assertion stays if `ExecutableName` is kept for display, or is dropped for choco.
 
-- [x] **Step 9: Wire the real locator** at both composition sites — `AppServices.cs:29` and `Cli/CliRunner.cs:31` — changing `new ChocoSource(runner)` to `new ChocoSource(runner, new ChocolateyLocator())`.
+- [x] **Step 9: Wire the real locator** at both composition sites, `AppServices.cs:29` and `Cli/CliRunner.cs:31`, changing `new ChocoSource(runner)` to `new ChocoSource(runner, new ChocolateyLocator())`.
 
 - [x] **Step 10: Run the suite; verify pass.** Run: `dotnet test -warnaserror`.
 
@@ -458,7 +458,7 @@ git commit -m "fix: trust Chocolatey only from an admin-controlled install folde
 
 **Interfaces:**
 - Consumes: `WindowsTools.ExplorerPath` (Task 2).
-- Produces: `public static class ShellLauncher { static void OpenUrl(string url, Action<string, string>? start = null); }` — composes `(WindowsTools.ExplorerPath, "\"<url>\"")` and calls `start` (default: a real `Process.Start(fileName, arguments)` wrapper with `UseShellExecute = false`). Routing through `explorer.exe` makes the shell start the browser at the user's integrity.
+- Produces: `public static class ShellLauncher { static void OpenUrl(string url, Action<string, string>? start = null); }`: composes `(WindowsTools.ExplorerPath, "\"<url>\"")` and calls `start` (default: a real `Process.Start(fileName, arguments)` wrapper with `UseShellExecute = false`). Routing through `explorer.exe` makes the shell start the browser at the user's integrity.
 
 - [x] **Step 1: Write the failing test (RED)**
 
@@ -480,7 +480,7 @@ public void OpenUrl_LaunchesExplorerWithTheQuotedUrl()
 
 - [x] **Step 4: Run; verify pass.**
 
-- [x] **Step 5: Wire `OnAboutClicked`** — replace the `Process.Start(new ProcessStartInfo(AppInfo.RepoUrl){ UseShellExecute = true })` block with `ShellLauncher.OpenUrl(AppInfo.RepoUrl);`.
+- [x] **Step 5: Wire `OnAboutClicked`**: replace the `Process.Start(new ProcessStartInfo(AppInfo.RepoUrl){ UseShellExecute = true })` block with `ShellLauncher.OpenUrl(AppInfo.RepoUrl);`.
 
 - [x] **Step 6: Build; run tests.** Run: `dotnet build -c Release -warnaserror` then `dotnet test -warnaserror` → PASS.
 
@@ -495,7 +495,7 @@ git commit -m "fix: open the About link through the shell so the browser runs de
 
 ---
 
-### Task 7: Installer — all-users-only, remove an old per-user copy
+### Task 7: Installer; all-users-only, remove an old per-user copy
 
 **Files:**
 - Modify: `installer/setup.iss` (`[Setup]` privileges; new `[Code]` section)
@@ -503,11 +503,11 @@ git commit -m "fix: open the About link through the shell so the browser runs de
 **Interfaces:**
 - Produces: a setup that always installs to `{autopf}\PatchPal` (Program Files) for all users, and that silently removes an existing per-user copy as the original user before installing.
 
-No xUnit tests — Inno Setup. Verified by `release.yml` `workflow_dispatch` build and the four manual install cases.
+No xUnit tests; Inno Setup. Verified by `release.yml` `workflow_dispatch` build and the four manual install cases.
 
-- [x] **Step 1: Force all-users** — in `[Setup]`, set `PrivilegesRequired=admin` and delete the `PrivilegesRequiredOverridesAllowed=dialog` line. Leave `{autopf}`/`{autoprograms}`/`{autodesktop}` as-is (they now resolve machine-wide).
+- [x] **Step 1: Force all-users**: in `[Setup]`, set `PrivilegesRequired=admin` and delete the `PrivilegesRequiredOverridesAllowed=dialog` line. Leave `{autopf}`/`{autoprograms}`/`{autodesktop}` as-is (they now resolve machine-wide).
 
-- [x] **Step 2: Remove the old per-user copy** — add a `[Code]` `InitializeSetup` (or `PrepareToInstall`) step that:
+- [x] **Step 2: Remove the old per-user copy**: add a `[Code]` `InitializeSetup` (or `PrepareToInstall`) step that:
   - reads `UninstallString` from `HKCU\...\Uninstall\{60cbe8cd-e316-4bc8-9a92-96305ec2c7d2}_is1`;
   - if present, runs it with `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART` via `ExecAsOriginalUser`, waiting for exit;
   - never blocks the install on failure; if it failed, set a flag so a closing message says the old per-user copy is still there.
@@ -522,7 +522,7 @@ git add installer/setup.iss
 git commit -m "fix: install Patch Pal for all users and remove an old per-user copy"
 ```
 
-**Manual done-when (a Windows machine where installing is fine; owner attends for the real PC):** fresh install; upgrade over a 2.1.0 all-users install; upgrade over a 2.1.0 per-user install; uninstall — all four keep `%APPDATA%\PatchPal` settings and history.
+**Manual done-when (a Windows machine where installing is fine; owner attends for the real PC):** fresh install; upgrade over a 2.1.0 all-users install; upgrade over a 2.1.0 per-user install; uninstall; all four keep `%APPDATA%\PatchPal` settings and history.
 
 ---
 
@@ -535,11 +535,11 @@ git commit -m "fix: install Patch Pal for all users and remove an old per-user c
 
 No tests (docs are exempt from the TDD gate).
 
-- [x] **Step 1: README** — Install: setup asks for admin and installs for all users. Portable zip: keep the whole folder together and extract it somewhere only an admin can change (e.g. under `C:\Program Files`), or use the installer; say why. Schedule a daily check: change the path to `"$env:ProgramFiles\PatchPal\PatchPal.exe"` and say the task must point at a copy only an admin can change.
+- [x] **Step 1: README**: Install: setup asks for admin and installs for all users. Portable zip: keep the whole folder together and extract it somewhere only an admin can change (e.g. under `C:\Program Files`), or use the installer; say why. Schedule a daily check: change the path to `"$env:ProgramFiles\PatchPal\PatchPal.exe"` and say the task must point at a copy only an admin can change.
 
-- [x] **Step 2: CHANGELOG** — add a `### Security` block under `[Unreleased]` summarising: DLLs beside the exe (no Temp), all-users-only setup, Scoop de-elevated, Chocolatey only from its admin-controlled folder, Windows tools by full path + DLL-search lock, About link de-elevated; name winget and the pre-`Main` runtime load as accepted limits. Add a plain note for "for me only" users who have scheduled tasks to repoint them.
+- [x] **Step 2: CHANGELOG**: add a `### Security` block under `[Unreleased]` summarising: DLLs beside the exe (no Temp), all-users-only setup, Scoop de-elevated, Chocolatey only from its admin-controlled folder, Windows tools by full path + DLL-search lock, About link de-elevated; name winget and the pre-`Main` runtime load as accepted limits. Add a plain note for "for me only" users who have scheduled tasks to repoint them.
 
-- [x] **Step 3: SIGNING.md** — note Microsoft already signs the five native DLLs, so signing covers only `PatchPal.exe` and the installers.
+- [x] **Step 3: SIGNING.md**: note Microsoft already signs the five native DLLs, so signing covers only `PatchPal.exe` and the installers.
 
 - [x] **Step 4: Commit**
 

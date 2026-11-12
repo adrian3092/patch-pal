@@ -30,7 +30,7 @@ public class AllAppsViewModelTests
         var vm = new AllAppsViewModel(new ScanState());
         vm.Refresh();
         Assert.Empty(vm.Rows);
-        Assert.Equal("No scan yet — run a scan from the Updates page", vm.SummaryText);
+        Assert.Equal("No scan yet. Run a scan from the Updates page", vm.SummaryText);
     }
 
     [Fact]

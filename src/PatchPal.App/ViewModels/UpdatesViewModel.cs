@@ -119,7 +119,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
             if (options.AllSourcesOff)
                 Warnings.Add("Every package source is switched off in Settings, so updates aren't checked.");
             else if (result.EnabledSources.Count == 0)
-                Warnings.Add("No package manager detected (winget, Scoop, Chocolatey) — updates cannot be checked.");
+                Warnings.Add("No package manager detected (winget, Scoop, Chocolatey), so updates cannot be checked.");
             OnPropertyChanged(nameof(EmptyStateText));
 
             LastScanText = $"Last scanned {now:HH:mm}";

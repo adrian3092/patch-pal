@@ -1,4 +1,4 @@
-# WinUpdateChecker v2 — C# / WPF Rewrite Design
+# WinUpdateChecker v2; C# / WPF Rewrite Design
 
 **Date:** 2026-06-10
 **Status:** Approved design, pending implementation plan
@@ -6,13 +6,13 @@
 
 ## Goal
 
-Rewrite WinUpdateChecker as a modern, professional-looking native Windows application while preserving every capability of the v1 PowerShell script. The scan/match/upgrade logic is a 1:1 port of the proven v1 behavior — including its security fixes — not a redesign.
+Rewrite WinUpdateChecker as a modern, professional-looking native Windows application while preserving every capability of the v1 PowerShell script. The scan/match/upgrade logic is a 1:1 port of the proven v1 behavior, including its security fixes, not a redesign.
 
 ## Decisions (settled during brainstorming)
 
 | Question | Decision |
 |---|---|
-| Keep pure PowerShell? | No — full rewrite approved |
+| Keep pure PowerShell? | No; full rewrite approved |
 | Stack | C# / .NET 8, WPF with the [WPF UI](https://github.com/lepoco/wpfui) Fluent library, MVVM via CommunityToolkit.Mvvm |
 | Scope | Full parity: GUI + headless CLI in one exe; PS script retired |
 | Layout | Sidebar navigation (Updates / All apps / History / Settings / About) |
@@ -25,7 +25,7 @@ Rewrite WinUpdateChecker as a modern, professional-looking native Windows applic
 
 ```
 WinUpdateChecker.sln
-├── src/WinUpdateChecker.Core/        # class library — all logic, zero UI references
+├── src/WinUpdateChecker.Core/        # class library; all logic, zero UI references
 │   ├── Scanning/   RegistryScanner   # HKLM + HKCU + WOW6432Node uninstall keys
 │   ├── Sources/    IPackageSource    # → WingetSource, ScoopSource, ChocoSource
 │   ├── Matching/   PackageMatcher    # exact → base-name → word-boundary; version compare
@@ -51,7 +51,7 @@ WinUpdateChecker.sln
 - Header: "Updates available" + relative "Last scanned X min ago"; right side: ghost `Scan` button (becomes `Cancel` during a scan) and primary `Update all (N)`.
 - Selection bar: select-all checkbox, "N selected" label, `Update selected` button, filter text box (live substring filter on name/id/source).
 - Rows: checkbox, app glyph, name, `installed → available` (available version emphasized), source badge (winget/scoop/choco), per-row `Update` button.
-- During upgrade a row's button is replaced in place by a slim progress bar + status text; finished rows show "✓ Updated" (success color) or "✕ Failed — view log" (opens captured CLI output). No console windows are ever shown. A toast summarizes the batch when it completes.
+- During upgrade a row's button is replaced in place by a slim progress bar + status text; finished rows show "✓ Updated" (success color) or "✕ Failed; view log" (opens captured CLI output). No console windows are ever shown. A toast summarizes the batch when it completes.
 - Empty state when no updates: friendly "Everything is up to date" with last-scan time and a Scan button.
 
 **All apps page:** same row style, every detected program, including "up to date" and "unknown" statuses; same filter box. Equivalent to v1 grid with "Only show updates" off.
@@ -68,8 +68,8 @@ WinUpdateChecker.sln
 **About dialog:** version, architecture (kept from 40f53b8), GitHub link.
 
 **Design-language rules (from ui-ux-pro-max review, adapted for desktop):**
-- All colors defined once as semantic resource tokens (success, danger, accent, surface…) — no hard-coded hex in views; both themes derive from the same tokens.
-- Green = update-available/success semantics; red = failure; never color alone — pair with icon or text.
+- All colors defined once as semantic resource tokens (success, danger, accent, surface…): no hard-coded hex in views; both themes derive from the same tokens.
+- Green = update-available/success semantics; red = failure; never color alone; pair with icon or text.
 - Segoe UI Variable; Fluent Segoe icon font or bundled SVG for icons; no emoji as icons.
 - Visible keyboard focus on every interactive control; full keyboard operability; grid rows expose UIA/screen-reader names.
 - Transitions 150–300 ms, transform/opacity only, honor Windows reduced-motion setting.
@@ -77,7 +77,7 @@ WinUpdateChecker.sln
 
 ## CLI mode
 
-Same exe. `--no-gui`, `--export-csv`, or `--export-html` runs headless on the console; `--source` and `--include-system-components` are mode-independent and also apply when launching the GUI (matching v1 behavior). CLI mode scans and exports only — upgrades are GUI-only, as in v1. Exit code 0 = success, 1 = scan failure.
+Same exe. `--no-gui`, `--export-csv`, or `--export-html` runs headless on the console; `--source` and `--include-system-components` are mode-independent and also apply when launching the GUI (matching v1 behavior). CLI mode scans and exports only; upgrades are GUI-only, as in v1. Exit code 0 = success, 1 = scan failure.
 
 | v1 (PowerShell) | v2 |
 |---|---|
@@ -99,7 +99,7 @@ This table also goes in the README as the migration guide. Export flags imply he
 ## Error handling
 
 - Missing package manager → source skipped, shown as "not installed" in Settings; never an error.
-- Source query failure → inline warning banner on Updates page ("winget query failed — results may be incomplete"); other sources still merge.
+- Source query failure → inline warning banner on Updates page ("winget query failed; results may be incomplete"); other sources still merge.
 - Upgrade failure → row marked failed, log stored in History, batch continues.
 - Corrupt `settings.json` / `history.json` → file backed up (`*.bak`) and recreated with defaults; app never crashes on bad state files.
 - CLI mode errors print to stderr and set exit code 1.
@@ -107,14 +107,14 @@ This table also goes in the README as the migration guide. Export flags imply he
 ## Testing
 
 - `Core.Tests` (xUnit) ports every case in `tests/Merge.Tests.ps1`: matching tiers, version comparison, phantom-VC++ suppression, id validation.
-- Parser tests per source using captured fixture output (winget/scoop/choco text) — no real package managers invoked in tests.
+- Parser tests per source using captured fixture output (winget/scoop/choco text): no real package managers invoked in tests.
 - `ProcessRunner` mocked behind an interface for source tests.
 - Coverage target: 80% on Core (per repo standard). View-models testable; views verified manually with a screenshot pass (light + dark) before release.
 
 ## Distribution, CI, migration
 
 - `dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true` plus the same for `win-arm64`.
-- `installer/setup.iss` updated to install the published exe; portable zip contains just the exe — `Run.bat` is removed since the exe is directly double-clickable.
+- `installer/setup.iss` updated to install the published exe; portable zip contains just the exe; `Run.bat` is removed since the exe is directly double-clickable.
 - `.github/workflows/release.yml` updated: build both architectures, run tests, produce installer + portable zips + `SHA256SUMS.txt` on tag push. SignPath plan unchanged.
 - `UpdateChecker.ps1`, `Run-Console.bat`, and the Pester tests are removed from the repo root once parity ships (history preserved in git). README rewritten around v2 with the flag-migration table.
 - Changelog starts a v2.0.0 entry.

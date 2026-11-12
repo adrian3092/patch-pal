@@ -1,14 +1,14 @@
-# WinUpdateChecker v2 — Plan 1 of 3: Core Engine + CLI
+# WinUpdateChecker v2; Plan 1 of 3: Core Engine + CLI
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build `WinUpdateChecker.Core` (the complete scan/match/upgrade engine, ported 1:1 from `UpdateChecker.ps1`) plus a working headless CLI, fully unit-tested.
 
-**Architecture:** Three-project .NET 8 solution per the spec (`docs/superpowers/specs/2026-06-10-wpf-rewrite-design.md`). All logic lives in `WinUpdateChecker.Core` with zero UI references; package-manager CLIs are wrapped behind `IProcessRunner` so every parser and source is testable with fixtures. The WPF App project is scaffolded with a placeholder window — the real GUI is Plan 2. After this plan, `WinUpdateChecker.exe --no-gui` is a working v2 replacement for `UpdateChecker.ps1 -NoGui`.
+**Architecture:** Three-project .NET 8 solution per the spec (`docs/superpowers/specs/2026-06-10-wpf-rewrite-design.md`). All logic lives in `WinUpdateChecker.Core` with zero UI references; package-manager CLIs are wrapped behind `IProcessRunner` so every parser and source is testable with fixtures. The WPF App project is scaffolded with a placeholder window; the real GUI is Plan 2. After this plan, `WinUpdateChecker.exe --no-gui` is a working v2 replacement for `UpdateChecker.ps1 -NoGui`.
 
 **Tech Stack:** C# / .NET 8 (`net8.0-windows`), WPF (placeholder only), xUnit.
 
-**Porting source of truth:** `UpdateChecker.ps1` (v1.0.3) and `tests/Merge.Tests.ps1`. Where this plan shows C# logic, it is a direct port — do not "improve" matching/filter behavior; the xUnit tests below encode the exact v1 semantics.
+**Porting source of truth:** `UpdateChecker.ps1` (v1.0.3) and `tests/Merge.Tests.ps1`. Where this plan shows C# logic, it is a direct port; do not "improve" matching/filter behavior; the xUnit tests below encode the exact v1 semantics.
 
 ---
 
@@ -117,7 +117,7 @@ public class VersionLogicTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter VersionLogicTests`
-Expected: FAIL — `VersionLogic` does not exist (compile error is the expected failure mode for a new type).
+Expected: FAIL; `VersionLogic` does not exist (compile error is the expected failure mode for a new type).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -225,7 +225,7 @@ public class NameNormalizerTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter NameNormalizerTests`
-Expected: FAIL — `NameNormalizer` does not exist.
+Expected: FAIL; `NameNormalizer` does not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -292,7 +292,7 @@ git commit -m "feat(core): port name normalization and prefix matching"
 
 ### Task 4: Package id validator
 
-Ports `Test-SafePackageId` (UpdateChecker.ps1:431-439) — the b95dca8 security fix.
+Ports `Test-SafePackageId` (UpdateChecker.ps1:431-439): the b95dca8 security fix.
 
 **Files:**
 - Create: `src/WinUpdateChecker.Core/Upgrading/PackageIdValidator.cs`
@@ -332,7 +332,7 @@ public class PackageIdValidatorTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter PackageIdValidatorTests`
-Expected: FAIL — `PackageIdValidator` does not exist.
+Expected: FAIL; `PackageIdValidator` does not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -413,7 +413,7 @@ public class UpgradeExitMessagesTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter UpgradeExitMessagesTests`
-Expected: FAIL — `UpgradeExitMessages` does not exist.
+Expected: FAIL; `UpgradeExitMessages` does not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -439,7 +439,7 @@ public static class UpgradeExitMessages
                 -1978335212 => "No installed package matched for upgrade.",                              // 0x8A150014
                 -1978334969 => "No installer applicable to this system.",                                // 0x8A150107
                 1602 => "Installer cancelled.",
-                1603 => "Fatal installer error (1603) — a newer version may already be present.",
+                1603 => "Fatal installer error (1603): a newer version may already be present.",
                 -2147023673 => "Operation cancelled (UAC prompt declined?).",
                 _ => $"winget exited with code {code} (0x{(uint)code:X8}).",
             };
@@ -465,13 +465,13 @@ git commit -m "feat(core): port upgrade exit-code messages"
 
 ### Task 6: Models + report merger
 
-Ports `Merge-ProgramsAndUpgrades` and `Resolve-DuplicatePackageRows` (UpdateChecker.ps1:319-427) — the heart of the tool, including the phantom-row fixes from 6610a06.
+Ports `Merge-ProgramsAndUpgrades` and `Resolve-DuplicatePackageRows` (UpdateChecker.ps1:319-427): the heart of the tool, including the phantom-row fixes from 6610a06.
 
 **Files:**
 - Create: `src/WinUpdateChecker.Core/Models/InstalledProgram.cs`, `src/WinUpdateChecker.Core/Models/UpgradeCandidate.cs`, `src/WinUpdateChecker.Core/Models/ReportRow.cs`, `src/WinUpdateChecker.Core/Matching/ReportMerger.cs`
 - Test: `tests/WinUpdateChecker.Core.Tests/Matching/ReportMergerTests.cs`
 
-- [ ] **Step 1: Create the model records (no behavior — no dedicated tests)**
+- [ ] **Step 1: Create the model records (no behavior; no dedicated tests)**
 
 `src/WinUpdateChecker.Core/Models/InstalledProgram.cs`:
 
@@ -610,7 +610,7 @@ public class ReportMergerTests
 - [ ] **Step 3: Run tests to verify they fail**
 
 Run: `dotnet test --filter ReportMergerTests`
-Expected: FAIL — `ReportMerger` does not exist.
+Expected: FAIL; `ReportMerger` does not exist.
 
 - [ ] **Step 4: Write the implementation**
 
@@ -739,7 +739,7 @@ public static class ReportMerger
 - [ ] **Step 5: Run tests to verify they pass**
 
 Run: `dotnet test --filter ReportMergerTests`
-Expected: PASS (9 tests). Also run the full suite (`dotnet test`) — everything still green.
+Expected: PASS (9 tests). Also run the full suite (`dotnet test`): everything still green.
 
 - [ ] **Step 6: Commit**
 
@@ -760,7 +760,7 @@ Ports the column-position parsing from `Get-WingetUpgrades` (UpdateChecker.ps1:1
 
 - [ ] **Step 1: Write the failing tests**
 
-The fixture mimics real winget output. **Column alignment matters** — the parser is position-based, so keep the fixture columns exactly aligned with the header words.
+The fixture mimics real winget output. **Column alignment matters**: the parser is position-based, so keep the fixture columns exactly aligned with the header words.
 
 ```csharp
 using WinUpdateChecker.Core.Sources;
@@ -827,7 +827,7 @@ public class WingetOutputParserTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter WingetOutputParserTests`
-Expected: FAIL — `WingetOutputParser` does not exist.
+Expected: FAIL; `WingetOutputParser` does not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -901,7 +901,7 @@ public static partial class WingetOutputParser
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `dotnet test --filter WingetOutputParserTests`
-Expected: PASS. If a column test fails, check fixture alignment first — the header word positions define the slice boundaries.
+Expected: PASS. If a column test fails, check fixture alignment first; the header word positions define the slice boundaries.
 
 - [ ] **Step 5: Commit**
 
@@ -977,7 +977,7 @@ public class ScoopOutputParserTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter ScoopOutputParserTests`
-Expected: FAIL — `ScoopOutputParser` does not exist.
+Expected: FAIL; `ScoopOutputParser` does not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -1042,7 +1042,7 @@ public static partial class ScoopOutputParser
 }
 ```
 
-**Note:** scoop's dashed separator line sits directly under the header and is skipped by construction — the data loop starts at `headerIndex + 2`, exactly like v1. The `SeparatorPattern` check only guards against stray pure-dash lines further down.
+**Note:** scoop's dashed separator line sits directly under the header and is skipped by construction; the data loop starts at `headerIndex + 2`, exactly like v1. The `SeparatorPattern` check only guards against stray pure-dash lines further down.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -1112,7 +1112,7 @@ public class ChocoOutputParserTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter ChocoOutputParserTests`
-Expected: FAIL — `ChocoOutputParser` does not exist.
+Expected: FAIL; `ChocoOutputParser` does not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -1158,7 +1158,7 @@ git commit -m "feat(core): port chocolatey output parser"
 
 ### Task 10: Process runner
 
-The single seam through which all package-manager CLIs are invoked. Thin OS wrapper — only `CommandExists` gets a unit test; `RunAsync`/`RunElevatedAsync` are exercised end-to-end in the Task 17 smoke test.
+The single seam through which all package-manager CLIs are invoked. Thin OS wrapper; only `CommandExists` gets a unit test; `RunAsync`/`RunElevatedAsync` are exercised end-to-end in the Task 17 smoke test.
 
 **Files:**
 - Create: `src/WinUpdateChecker.Core/Sources/IProcessRunner.cs`, `src/WinUpdateChecker.Core/Sources/ProcessRunner.cs`
@@ -1186,7 +1186,7 @@ public class ProcessRunnerTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter ProcessRunnerTests`
-Expected: FAIL — `ProcessRunner` does not exist.
+Expected: FAIL; `ProcessRunner` does not exist.
 
 - [ ] **Step 3: Write the interface and implementation**
 
@@ -1236,7 +1236,7 @@ public sealed class ProcessRunner : IProcessRunner
                 }
                 catch (ArgumentException)
                 {
-                    // malformed PATH entry — skip it
+                    // malformed PATH entry; skip it
                 }
             }
         }
@@ -1425,7 +1425,7 @@ public class PackageSourceTests
 - [ ] **Step 3: Run tests to verify they fail**
 
 Run: `dotnet test --filter PackageSourceTests`
-Expected: FAIL — `IPackageSource` and the source classes do not exist.
+Expected: FAIL; `IPackageSource` and the source classes do not exist.
 
 - [ ] **Step 4: Write the interface and implementations**
 
@@ -1452,7 +1452,7 @@ public interface IPackageSource
 
     /// <summary>
     /// Invoke the manager's upgrade command for a package id. Callers MUST validate the id
-    /// with <see cref="Upgrading.PackageIdValidator"/> first — UpgradeRunner enforces this.
+    /// with <see cref="Upgrading.PackageIdValidator"/> first; UpgradeRunner enforces this.
     /// </summary>
     Task<ProcessResult> RunUpgradeAsync(string packageId, CancellationToken ct = default);
 }
@@ -1634,7 +1634,7 @@ public class UpgradeRunnerTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter UpgradeRunnerTests`
-Expected: FAIL — `UpgradeRunner` / `UpgradeResult` do not exist.
+Expected: FAIL; `UpgradeRunner` / `UpgradeResult` do not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -1787,7 +1787,7 @@ public class RegistryEntryFilterTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter RegistryEntryFilterTests`
-Expected: FAIL — types do not exist.
+Expected: FAIL; types do not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -1856,7 +1856,7 @@ namespace WinUpdateChecker.Core.Scanning;
 
 /// <summary>
 /// Reads installed programs from the HKLM/HKCU uninstall keys (including WOW6432Node),
-/// ported from v1 Get-InstalledPrograms. Thin registry walk — the filter rules live in
+/// ported from v1 Get-InstalledPrograms. Thin registry walk; the filter rules live in
 /// <see cref="RegistryEntryFilter"/> where they are unit-tested.
 /// </summary>
 public sealed class RegistryScanner : IInstalledProgramProvider
@@ -2028,7 +2028,7 @@ public class ScanServiceTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter ScanServiceTests`
-Expected: FAIL — `ScanService` / `ScanOptions` / `ScanResult` do not exist.
+Expected: FAIL; `ScanService` / `ScanOptions` / `ScanResult` do not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -2054,7 +2054,7 @@ public sealed record ScanResult(
 /// <summary>
 /// Runs a full scan: registry read and all enabled source queries in parallel
 /// (v1 ran them sequentially), then merges. A source that fails to query becomes
-/// a warning — never a scan failure.
+/// a warning; never a scan failure.
 /// </summary>
 public sealed class ScanService(IInstalledProgramProvider programProvider, IEnumerable<IPackageSource> sources)
 {
@@ -2098,7 +2098,7 @@ public sealed class ScanService(IInstalledProgramProvider programProvider, IEnum
         }
         catch (Exception ex)
         {
-            return ([], $"{source.Name} query failed — results may be incomplete ({ex.Message})");
+            return ([], $"{source.Name} query failed; results may be incomplete ({ex.Message})");
         }
     }
 }
@@ -2107,7 +2107,7 @@ public sealed class ScanService(IInstalledProgramProvider programProvider, IEnum
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `dotnet test --filter ScanServiceTests`
-Expected: PASS. Run the full suite too: `dotnet test` — all green.
+Expected: PASS. Run the full suite too: `dotnet test`: all green.
 
 - [ ] **Step 5: Commit**
 
@@ -2204,7 +2204,7 @@ public class ExporterTests
 - [ ] **Step 3: Run tests to verify they fail**
 
 Run: `dotnet test --filter ExporterTests`
-Expected: FAIL — exporters do not exist.
+Expected: FAIL; exporters do not exist.
 
 - [ ] **Step 4: Write the implementations**
 
@@ -2429,7 +2429,7 @@ public class CliOptionsTests
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `dotnet test --filter CliOptionsTests`
-Expected: FAIL — `CliOptions` does not exist.
+Expected: FAIL; `CliOptions` does not exist.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -2513,7 +2513,7 @@ git commit -m "feat(core): add CLI options parser"
 
 ---
 
-### Task 17: App entry point — CLI runner + placeholder window
+### Task 17: App entry point; CLI runner + placeholder window
 
 One exe, two modes. WPF stays the default; CLI flags attach to the parent console and run headless. The real GUI replaces the placeholder in Plan 2.
 
@@ -2666,13 +2666,13 @@ public static class CliRunner
 
 - [ ] **Step 4: Replace the placeholder MainWindow content**
 
-`src/WinUpdateChecker.App/MainWindow.xaml` — replace the template `<Grid>` with:
+`src/WinUpdateChecker.App/MainWindow.xaml`: replace the template `<Grid>` with:
 
 ```xml
 <Grid>
     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
                FontSize="16" Foreground="Gray"
-               Text="WinUpdateChecker v2 — GUI arrives in Plan 2. Use --no-gui for the console." />
+               Text="WinUpdateChecker v2; GUI arrives in Plan 2. Use --no-gui for the console." />
 </Grid>
 ```
 
@@ -2682,7 +2682,7 @@ And set the window title attribute on the root element: `Title="WinUpdateChecker
 
 ```powershell
 dotnet build
-# Headless scan (real winget run — takes 5-15 s):
+# Headless scan (real winget run; takes 5-15 s):
 dotnet run --project src/WinUpdateChecker.App -- --no-gui
 # Export check:
 dotnet run --project src/WinUpdateChecker.App -- --export-html "$env:TEMP\wuc-smoke.html"
@@ -2691,7 +2691,7 @@ dotnet run --project src/WinUpdateChecker.App -- --export-html "$env:TEMP\wuc-sm
 dotnet run --project src/WinUpdateChecker.App -- --source npm; echo "exit=$LASTEXITCODE"
 ```
 
-Expected: `--no-gui` prints the counts line and a column-aligned table matching what `.\UpdateChecker.ps1 -NoGui` reports on the same machine (same update count — this is the parity check); the HTML report opens and looks like the v1 report; the bad-source run prints `error: Unknown source 'npm'...` and `exit=1`.
+Expected: `--no-gui` prints the counts line and a column-aligned table matching what `.\UpdateChecker.ps1 -NoGui` reports on the same machine (same update count; this is the parity check); the HTML report opens and looks like the v1 report; the bad-source run prints `error: Unknown source 'npm'...` and `exit=1`.
 
 - [ ] **Step 6: Run the full test suite one last time**
 

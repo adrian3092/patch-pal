@@ -33,3 +33,6 @@ obj/
 
 # Test/smoke artifacts
 smoke-*.txt
+
+# Local editor/assistant settings
+.claude/

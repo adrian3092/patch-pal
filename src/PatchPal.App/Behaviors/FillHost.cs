@@ -8,7 +8,7 @@ namespace PatchPal.App.Behaviors;
 /// <summary>
 /// WPF-UI's NavigationView hosts each page in a NavigationViewContentPresenter (a
 /// <see cref="Frame"/>) that measures content with infinite height. Star-sized rows
-/// therefore grow to their full content height and inner ScrollViewers never engage —
+/// therefore grow to their full content height and inner ScrollViewers never engage:
 /// long lists are clipped at the window edge with no scrollbar.
 ///
 /// Setting <c>FillHost.Enabled="True"</c> on a page's root element binds its Height to

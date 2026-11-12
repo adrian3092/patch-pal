@@ -75,8 +75,8 @@ public static class ReportMerger
     /// The installed version to compare with the available one. winget names an installed
     /// program by its registry display name and reports its version in package numbering, which
     /// can differ from the registry's (the .NET SDK registers 8.4.2226.x for winget's 8.0.422),
-    /// so an exact winget match uses winget's version when it reports one. Fuzzy matches —
-    /// including names winget truncated with "…" — may be a newer entry than the one winget
+    /// so an exact winget match uses winget's version when it reports one. Fuzzy matches
+    /// (including names winget truncated with "…") may be a newer entry than the one winget
     /// keyed off, and Scoop/Chocolatey versions are their own records, so those keep the
     /// registry version.
     /// </summary>
@@ -121,7 +121,7 @@ public static class ReportMerger
             if (SameName(up.Name, prog.Name))
                 return (up, true);
 
-        // Guard fuzzy passes against empty names — mirrors v1 PowerShell truthiness check.
+        // Guard fuzzy passes against empty names; mirrors v1 PowerShell truthiness check.
         // An empty prog.Name would build a \b\b regex that matches any upgrade name.
         if (string.IsNullOrEmpty(prog.Name)) return (null, false);
 

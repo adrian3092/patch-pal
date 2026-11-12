@@ -8,8 +8,8 @@ public sealed record BatchItem(
 
 /// <summary>
 /// Runs a batch of upgrades: sequential within each source (a package manager cannot
-/// run concurrently with itself), parallel across sources. Every attempt — success or
-/// failure — is appended to History, and a failure never blocks the rest of the batch,
+/// run concurrently with itself), parallel across sources. Every attempt, success or
+/// failure, is appended to History, and a failure never blocks the rest of the batch,
 /// not even a failure to write History: that result carries the reason instead.
 /// Callbacks may fire on worker threads; UI callers must marshal to the dispatcher.
 /// </summary>

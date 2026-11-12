@@ -31,7 +31,7 @@ public static class Program
         var options = CliOptions.Parse(args);
         if (options.IsHeadless)
         {
-            // If stdout is already a real handle (redirected to a pipe/file), use it as-is —
+            // If stdout is already a real handle (redirected to a pipe/file), use it as-is;
             // attaching a console would steal output away from the redirection. Only borrow
             // or allocate a console when we have no stdout at all (launched from a shell
             // without redirection, Task Scheduler, or Explorer).
