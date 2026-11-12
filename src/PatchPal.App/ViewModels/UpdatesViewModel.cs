@@ -108,9 +108,22 @@ public sealed partial class UpdatesViewModel : ObservableObject
             _scanState.LastResult = result;
             _scanState.LastScanTime = now;
 
+            // The page rescans right after a batch. An update that failed and is still offered at the
+            // same version keeps its failure, so the reason stays on screen until it's retried.
+            var failed = Rows.Where(r => r.State == RowState.Failed)
+                .GroupBy(FailureKey).ToDictionary(g => g.Key, g => g.First());
             Rows.Clear();
             foreach (var row in result.Rows.Where(r => r.IsUpdate))
-                Rows.Add(new UpdateRowViewModel(row));
+            {
+                var vm = new UpdateRowViewModel(row);
+                if (failed.TryGetValue(FailureKey(vm), out var before))
+                {
+                    vm.State = RowState.Failed;
+                    vm.StateMessage = before.StateMessage;
+                    vm.Log = before.Log;
+                }
+                Rows.Add(vm);
+            }
             UpdateCount = Rows.Count;
             UpdatableCount = Rows.Count(r => r.IsUpdatable);
 
@@ -140,6 +153,8 @@ public sealed partial class UpdatesViewModel : ObservableObject
     }
 
     /// <summary>Filter predicate shared by the page's CollectionView and the tests.</summary>
+    private static string FailureKey(UpdateRowViewModel row) => $"{row.Source}|{row.Row.PackageId}|{row.Available}";
+
     public bool MatchesFilter(UpdateRowViewModel row, string filter)
     {
         if (string.IsNullOrWhiteSpace(filter)) return true;
