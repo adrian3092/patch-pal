@@ -6,8 +6,6 @@ It reads the same uninstall registry keys that **Programs and Features** uses, t
 
 Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero telemetry. Ships as a single self-contained exe, so no .NET install is needed.
 
-> **v2.0 is a complete rewrite and a rename.** v1 shipped as **WinUpdateChecker**, a PowerShell + WinForms script; v2 is a native application called **Patch Pal**. Installing v2 upgrades an existing v1 install in place, and your settings and update history carry over. See the [CHANGELOG](CHANGELOG.md) and the [Migrating from v1.x](#migrating-from-v1x) section below.
-
 ---
 
 ## Features
