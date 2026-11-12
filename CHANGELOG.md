@@ -6,7 +6,13 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-11-12
+
 ### Security
+- **Releases are code signed.** The installers and `PatchPal.exe` carry an Authenticode
+  signature, so Windows shows the publisher's name instead of "Unknown publisher". SmartScreen
+  may still warn about a download until the new signature has built up reputation; see
+  [`docs/SIGNING.md`](docs/SIGNING.md).
 - Patch Pal now runs on .NET 10, which Microsoft supports with security fixes until November
   2028. .NET 8 reached the end of its support on November 10, 2026, so flaws found in it from
   now on won't be fixed. The runtime ships inside the exe, so updating Patch Pal is all it takes.
@@ -33,8 +39,6 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   is up to date"; it says no scan has run yet.
 - On Settings, the description under "Include Windows system components" no longer runs
   into its switch.
-- Releases are set up to be code signed with Azure Artifact Signing (`docs/SIGNING.md`); signing switches on once the Azure account is in place.
-- The README's SignPath code signing policy is replaced by a short Privacy section.
 
 ## [2.2.0] - 2026-11-11
 

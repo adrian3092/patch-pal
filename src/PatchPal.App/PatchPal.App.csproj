@@ -19,7 +19,7 @@
     <StartupHookSupport>false</StartupHookSupport>
     <StartupObject>PatchPal.App.Program</StartupObject>
     <AssemblyName>PatchPal</AssemblyName>
-    <Version>2.2.0</Version>
+    <Version>2.3.0</Version>
     <!-- Signed files carry the project name and a plain release version, without the
          "+commit" suffix. -->
     <Product>Patch Pal</Product>
