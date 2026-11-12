@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write   # Azure sign-in (OpenID Connect) for code signing
 
 jobs:
   test:
@@ -26,6 +27,8 @@ jobs:
   build:
     needs: test
     runs-on: windows-latest
+    # Azure trusts sign-ins from this environment only (see docs/SIGNING.md).
+    environment: release
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -78,6 +81,29 @@ jobs:
             }
           }
 
+      # Code signing (docs/SIGNING.md). Skipped while ARTIFACT_SIGNING_ACCOUNT is unset.
+      - name: Azure login
+        if: vars.ARTIFACT_SIGNING_ACCOUNT != ''
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign PatchPal.exe
+        if: vars.ARTIFACT_SIGNING_ACCOUNT != ''
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.ARTIFACT_SIGNING_PROFILE }}
+          files: |
+            ${{ github.workspace }}\dist\publish-x64\PatchPal.exe
+            ${{ github.workspace }}\dist\publish-arm64\PatchPal.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
       - name: Install Inno Setup
         shell: pwsh
         run: choco install innosetup --no-progress -y
@@ -92,6 +118,29 @@ jobs:
               installer\setup.iss
             if ($LASTEXITCODE -ne 0) { exit 1 }
           }
+
+      - name: Sign installers
+        if: vars.ARTIFACT_SIGNING_ACCOUNT != ''
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.ARTIFACT_SIGNING_PROFILE }}
+          files-folder: ${{ github.workspace }}\dist
+          files-folder-filter: PatchPal-Setup-*.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Check signatures
+        if: vars.ARTIFACT_SIGNING_ACCOUNT != ''
+        shell: pwsh
+        run: |
+          $files = @(Get-Item dist/publish-*/PatchPal.exe, dist/PatchPal-Setup-*.exe)
+          if ($files.Count -ne 4) { Write-Host "Expected 4 files to check, found $($files.Count)"; exit 1 }
+          $bad = $files | Where-Object { (Get-AuthenticodeSignature $_.FullName).Status -ne 'Valid' }
+          if ($bad) { Write-Host "Not validly signed:"; $bad.FullName | Write-Host; exit 1 }
+          $files | ForEach-Object { $s = Get-AuthenticodeSignature $_.FullName; "$($_.Name): $($s.SignerCertificate.Subject)" }
 
       - name: Build portable zips
         shell: pwsh
@@ -113,23 +162,6 @@ jobs:
           } | Set-Content SHA256SUMS.txt -Encoding ASCII
           Get-Content SHA256SUMS.txt
           Pop-Location
-
-      # ----------------------------------------------------------------------
-      # OPTIONAL: SignPath integration. Uncomment after your project is
-      # accepted at https://signpath.io/ and you have an artifact-config GUID.
-      # ----------------------------------------------------------------------
-      # - name: Submit signing request
-      #   uses: signpath/github-action-submit-signing-request@v1
-      #   with:
-      #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-      #     organization-id: '<your-org-id>'
-      #     project-slug: 'patch-pal'
-      #     signing-policy-slug: 'release-signing'
-      #     artifact-configuration-slug: 'installer'
-      #     github-artifact-id: ${{ steps.upload.outputs.artifact-id }}
-      #     wait-for-completion: true
-      #     output-artifact-directory: 'dist-signed'
-      # ----------------------------------------------------------------------
 
       - name: Upload artifacts
         id: upload

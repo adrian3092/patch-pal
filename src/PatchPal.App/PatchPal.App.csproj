@@ -20,8 +20,8 @@
     <StartupObject>PatchPal.App.Program</StartupObject>
     <AssemblyName>PatchPal</AssemblyName>
     <Version>2.2.0</Version>
-    <!-- Signed files must carry the project name and the release version (SignPath metadata
-         restrictions): "Patch Pal" and a plain version, without the "+commit" suffix. -->
+    <!-- Signed files carry the project name and a plain release version, without the
+         "+commit" suffix. -->
     <Product>Patch Pal</Product>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>PatchPal.ico</ApplicationIcon>
