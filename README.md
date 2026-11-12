@@ -6,6 +6,11 @@ It reads the same uninstall registry keys that **Programs and Features** uses, t
 
 Built in C# on .NET 10 with a Fluent (WPF) interface. Light and dark themes. Zero telemetry. Ships as a single self-contained exe, so no .NET install is needed.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/updates-dark.png">
+  <img alt="Patch Pal's Updates page listing seven programs with updates available" src="assets/screenshots/updates-light.png">
+</picture>
+
 ---
 
 ## Features
@@ -148,7 +153,7 @@ The **Source** column tells you which manager owns each update; updating dispatc
 No. It only reads the registry and queries package managers. Updates only run when you explicitly click an Update button in the GUI.
 
 **Why does Windows say "Windows protected your PC"?**
-SmartScreen warns on unsigned downloads it hasn't seen before. Right-click the zip → Properties → Unblock before extracting, or click **More info → Run anyway** on the installer. Verify the SHA-256 hash first (see below).
+Releases from v2.3.0 on are code signed, so Windows shows the publisher's name instead of "Unknown publisher". SmartScreen can still warn about a download until enough people have run it, because its trust builds up over time even for signed files. Check the signature (**Properties → Digital Signatures**) and the SHA-256 hash (see below), then click **More info → Run anyway**. For the portable zip, right-click it → **Properties** → **Unblock** before extracting.
 
 **Why is the download so big?**
 The exe bundles the entire .NET runtime so it runs on any machine with zero prerequisites: no .NET install, no PowerShell version requirements.
