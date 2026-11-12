@@ -180,7 +180,7 @@ Each GitHub release includes a `SHA256SUMS.txt`. Verify a downloaded artifact:
 Get-FileHash .\PatchPal-Setup-2.2.0-x64.exe -Algorithm SHA256
 ```
 
-Compare against the published hash before running. Releases signed with [Azure Artifact Signing](docs/SIGNING.md) also carry an Authenticode signature; check the file's **Properties → Digital Signatures** tab. Releases up to v2.2.0 are unsigned.
+Compare against the published hash before running. Releases from v2.3.0 on also carry an Authenticode signature; check the file's **Properties → Digital Signatures** tab. Releases up to v2.2.0 are unsigned.
 
 ## Privacy
 
@@ -202,7 +202,7 @@ dotnet publish src/PatchPal.App -c Release -r win-x64 --self-contained `
 
 Swap `win-x64` / `x64` for `win-arm64` / `arm64` to build the ARM64 artifacts.
 
-CI builds a draft release when a version tag is pushed: `git tag v2.3.0 && git push --tags`. See [`.github/workflows/release.yml`](.github/workflows/release.yml) and [`docs/SIGNING.md`](docs/SIGNING.md) for details.
+CI builds a draft release when a version tag is pushed: `git tag v2.3.0 && git push --tags`. See [`.github/workflows/release.yml`](.github/workflows/release.yml) for details.
 
 ## Contributing
 

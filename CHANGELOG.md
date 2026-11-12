@@ -11,8 +11,7 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 ### Security
 - **Releases are code signed.** The installers and `PatchPal.exe` carry an Authenticode
   signature, so Windows shows the publisher's name instead of "Unknown publisher". SmartScreen
-  may still warn about a download until the new signature has built up reputation; see
-  [`docs/SIGNING.md`](docs/SIGNING.md).
+  may still warn about a download until the new signature has built up reputation.
 - Patch Pal now runs on .NET 10, which Microsoft supports with security fixes until November
   2028. .NET 8 reached the end of its support on November 10, 2026, so flaws found in it from
   now on won't be fixed. The runtime ships inside the exe, so updating Patch Pal is all it takes.
