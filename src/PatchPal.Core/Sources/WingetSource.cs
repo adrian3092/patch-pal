@@ -2,7 +2,7 @@ using PatchPal.Core.Models;
 
 namespace PatchPal.Core.Sources;
 
-public sealed class WingetSource(IProcessRunner runner) : IPackageSource
+public sealed class WingetSource(IProcessRunner runner) : IPackageSource, IInstallerArchitectureCheck
 {
     public string Name => "winget";
     public string ExecutableName => "winget";
@@ -30,4 +30,12 @@ public sealed class WingetSource(IProcessRunner runner) : IPackageSource
     public Task<ProcessResult> RunUpgradeAsync(string packageId, string? repository = null, CancellationToken ct = default)
         => runner.RunElevatedAsync("winget",
             $"upgrade --id {packageId} --exact --source {repository ?? "winget"} --accept-package-agreements --accept-source-agreements --disable-interactivity -h", ct);
+
+    // Only reads the catalog, so it needs no admin rights.
+    public async Task<bool?> HasInstallerForAsync(string packageId, string repository, string architecture, CancellationToken ct = default)
+    {
+        var result = await runner.RunAsync("winget",
+            $"show --id {packageId} --exact --source {repository} --architecture {architecture} --accept-source-agreements --disable-interactivity", ct);
+        return WingetShowParser.HasInstaller(result.StdOut, packageId);
+    }
 }

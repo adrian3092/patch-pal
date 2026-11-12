@@ -18,6 +18,11 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - The exe is about 20 MB smaller.
 
 ### Fixed
+- **Failed updates on ARM PCs say why.** winget often has only an x64 installer for an app, and
+  some apps refuse to install that on ARM (NordVPN and VeraCrypt, for example). When an update
+  fails on an ARM PC, Patch Pal now checks whether winget has an ARM64 installer for the app;
+  if it doesn't, the update says so and suggests updating from within the app or with the
+  publisher's ARM64 installer. The installer's own error stays in the log.
 - **Dark mode is readable.** Page titles and text were near-black on the dark background,
   and the app lists on Updates and All apps sat on a white panel. Both now follow the theme.
 - On Settings, the description under "Include Windows system components" no longer runs
