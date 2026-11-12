@@ -6,7 +6,13 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Security
+- Patch Pal now runs on .NET 10, which Microsoft supports with security fixes until November
+  2028. .NET 8 reached the end of its support on November 10, 2026, so flaws found in it from
+  now on won't be fixed. The runtime ships inside the exe, so updating Patch Pal is all it takes.
+
 ### Changed
+- The exe is about 20 MB smaller.
 - Releases are set up to be code signed with Azure Artifact Signing (`docs/SIGNING.md`); signing switches on once the Azure account is in place.
 - The README's SignPath code signing policy is replaced by a short Privacy section.
 
