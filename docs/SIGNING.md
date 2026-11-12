@@ -1,52 +1,49 @@
 # Code signing
 
-Patch Pal is signed through the [SignPath Foundation](https://signpath.org) program, which gives open-source projects free code signing. The certificate is issued to SignPath Foundation, so Windows shows **SignPath Foundation** as the publisher. The project's commitments are in the README's [Code signing policy](../README.md#code-signing-policy).
+Patch Pal releases are signed with [Azure Artifact Signing](https://learn.microsoft.com/azure/artifact-signing/quickstart) (formerly Trusted Signing). The certificate is issued to the maintainer as an individual developer, so Windows shows the maintainer's name as the publisher.
 
-Releases up to v2.0.0 are unsigned.
+Releases up to v2.2.0 are unsigned.
 
-Only `PatchPal.exe` and the installers need signing. The five WPF native DLLs that ship beside the exe (`*_cor3.dll`) are already signed by Microsoft.
+Only `PatchPal.exe` and the installers need signing. The WPF native DLLs that ship beside the exe (`*_cor3.dll`) are already signed by Microsoft.
 
-Signing removes the "Unknown publisher" warning from UAC prompts. SmartScreen's "Windows protected your PC" warning fades as signed downloads build reputation; no certificate skips that step any more (EV certificates stopped doing so in August 2024).
+Signing removes the "Unknown publisher" warning from UAC prompts. SmartScreen's "Windows protected your PC" warning fades as signed downloads build reputation; no certificate skips that step.
 
 ---
 
-## Conditions to keep meeting
+## How CI signs a release
 
-From the [SignPath Foundation terms](https://signpath.org/terms.html):
+`.github/workflows/release.yml` signs in two passes with [`azure/artifact-signing-action`](https://github.com/Azure/artifact-signing-action):
 
-- An OSI-approved license (MIT) with no commercial dual-licensing and no proprietary components. A paid or closed edition of Patch Pal would end eligibility.
-- Multi-factor authentication for every team member, on both GitHub and SignPath.
-- The code signing policy stays on the README and is linked from each release's notes.
-- Every release is approved by hand in SignPath before it is signed.
-- Signed files carry the project name and release version: product name `Patch Pal` (set in `src/PatchPal.App/PatchPal.App.csproj` and `installer/setup.iss`) and the version CI passes from the tag.
+1. After `dotnet publish`: both `PatchPal.exe` builds (x64 and arm64), so the installers and portable zips carry the signed exe.
+2. After Inno Setup: both `PatchPal-Setup-*.exe` installers.
+
+`SHA256SUMS.txt` is generated afterwards, from the signed files. A check step fails the build if any of those files lacks a valid signature.
+
+Both passes run only when the repository variable `ARTIFACT_SIGNING_ACCOUNT` is set; without it, releases build unsigned as before. CI signs in to Azure with OpenID Connect, so no Azure password or client secret is stored in GitHub.
 
 ---
 
 ## One-time setup
 
-1. **Apply** at <https://signpath.org/apply>. Give the repository URL and the code signing policy URL (`https://github.com/adrian3092/patch-pal#code-signing-policy`). Approval takes some days.
-2. **After approval, in SignPath:**
-   - Create the project `patch-pal` and link the GitHub repository as its trusted build system.
-   - Create two artifact configurations, each restricted to product name `Patch Pal` and the release version:
-     - `exe`: signs the two `PatchPal.exe` builds (x64 and arm64) before they are packaged.
-     - `installer`: signs the two `PatchPal-Setup-*.exe` installers.
-   - Create the signing policy `release-signing` with manual approval.
-   - Add a CI API token to the GitHub repo as the secret `SIGNPATH_API_TOKEN`, and the SignPath organization ID as the repository variable `SIGNPATH_ORGANIZATION_ID`.
-3. **Wire up `.github/workflows/release.yml`** with two signing requests, using `signpath/github-action-submit-signing-request`:
-   - After `dotnet publish`: sign `PatchPal.exe`, so the installers and portable zips both contain the signed exe.
-   - After Inno Setup: sign the installers, then generate `SHA256SUMS.txt` from the signed files.
+Individual developers must live in the US or Canada. Billing starts when the signing account is created and is not prorated.
 
-   Gate both steps on `SIGNPATH_ORGANIZATION_ID` so releases still build unsigned when it isn't set. Add a **Code signing policy** link to the release notes. Test with a manual `workflow_dispatch` run before tagging.
+1. **Azure subscription.** Use one whose billing account type is *Individual*; individual identity validation reads its details from that billing account.
+2. **Register the resource provider** `Microsoft.CodeSigning` on the subscription.
+3. **Create an Artifact Signing account** (Basic SKU is plenty) in a region near you. Note its name and the region's endpoint, for example `https://eus.codesigning.azure.net/` for East US.
+4. **Assign yourself the role** *Artifact Signing Identity Verifier* on the account, then in the portal open **Identity validation → New identity → Individual**. Validation can only be done in the portal. Microsoft emails a link to finish the check with a government ID; sign in to it with the same email address as on the request.
+5. **Create a certificate profile** of type *Public Trust* once validation succeeds. Note its name.
+6. **Let GitHub Actions sign:**
+   - In Microsoft Entra ID, create an app registration (for example `patch-pal-signing`).
+   - Under **Certificates & secrets → Federated credentials**, add a GitHub Actions credential for `adrian3092/patch-pal`, entity type **Environment**, name `release`. The workflow's build job runs in that environment for both tag runs and runs started by hand. In GitHub (Settings → Environments → `release`), limit it to the `main` branch and `v*` tags so other branches can't sign.
+   - On the signing account, give that app the role *Artifact Signing Certificate Profile Signer*.
+7. **Add to the GitHub repo** (Settings → Secrets and variables → Actions):
+   - Secrets: `AZURE_CLIENT_ID` (the app's client ID), `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
+   - Variables: `ARTIFACT_SIGNING_ENDPOINT`, `ARTIFACT_SIGNING_ACCOUNT`, `ARTIFACT_SIGNING_PROFILE`.
+8. **Test** with a manual run of the Release workflow from `main`, then check the downloaded exe as shown below before tagging a release.
 
 ### Known limitation
 
-Inno Setup's uninstaller (`unins000.exe`) is generated and compressed inside the installer, so it stays unsigned. Uninstalling an all-users install therefore shows an "Unknown publisher" UAC prompt.
-
----
-
-## Alternative: Azure Artifact Signing
-
-If Patch Pal ever needs a certificate in its own name (for example, for a paid edition), [Azure Artifact Signing](https://learn.microsoft.com/azure/artifact-signing/quickstart) costs $9.99/month. Individual developers must be in the US or Canada and verify their identity with a government ID; the certificate shows the developer's name and city, state, and country.
+Inno Setup's uninstaller (`unins000.exe`) is generated and compressed inside the installer, so it stays unsigned. Uninstalling therefore shows an "Unknown publisher" UAC prompt.
 
 ---
 
@@ -54,7 +51,7 @@ If Patch Pal ever needs a certificate in its own name (for example, for a paid e
 
 ```powershell
 Get-AuthenticodeSignature .\PatchPal.exe | Format-List *
-Get-AuthenticodeSignature .\PatchPal-Setup-2.0.0-x64.exe | Format-List *
+Get-AuthenticodeSignature .\PatchPal-Setup-2.3.0-x64.exe | Format-List *
 ```
 
 A trusted signature shows `Status: Valid` and a non-empty `TimeStamperCertificate`.

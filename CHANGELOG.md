@@ -6,6 +6,11 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Changed
+
+- Releases are set up to be code signed with Azure Artifact Signing (`docs/SIGNING.md`); signing switches on once the Azure account is in place.
+- The README's SignPath code signing policy is replaced by a short Privacy section.
+
 ## [2.2.0] - 2026-11-11
 
 ### Fixed
