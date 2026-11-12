@@ -5,7 +5,8 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:PatchPal.App.ViewModels"
     xmlns:behaviors="clr-namespace:PatchPal.App.Behaviors"
-    Title="All apps">
+    Title="All apps"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Grid Margin="20,12,20,12" behaviors:FillHost.Enabled="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -20,16 +21,16 @@
                         PlaceholderText="Filter apps…" ClearButtonEnabled="True"
                         Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" />
         </DockPanel>
-        <ListView Grid.Row="1" ItemsSource="{Binding Rows}"
+        <ui:ListView Grid.Row="1" ItemsSource="{Binding Rows}"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                   VirtualizingPanel.VirtualizationMode="Recycling">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
+            <ui:ListView.ItemContainerStyle>
+                <Style TargetType="ui:ListViewItem" BasedOn="{StaticResource {x:Type ui:ListViewItem}}">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                     <Setter Property="Padding" Value="0" />
                 </Style>
-            </ListView.ItemContainerStyle>
-            <ListView.ItemTemplate>
+            </ui:ListView.ItemContainerStyle>
+            <ui:ListView.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:UpdateRowViewModel}">
                     <Border CornerRadius="6" Padding="12,8" Margin="0,0,0,5"
                             Background="{DynamicResource ControlFillColorDefaultBrush}">
@@ -53,7 +54,7 @@
                         </DockPanel>
                     </Border>
                 </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+            </ui:ListView.ItemTemplate>
+        </ui:ListView>
     </Grid>
 </Page>
