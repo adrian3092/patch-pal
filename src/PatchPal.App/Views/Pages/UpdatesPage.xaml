@@ -172,7 +172,18 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <ui:SymbolIcon Symbol="CheckmarkCircle48" FontSize="48" Opacity="0.5" HorizontalAlignment="Center" />
+                <ui:SymbolIcon FontSize="48" Opacity="0.5" HorizontalAlignment="Center">
+                    <ui:SymbolIcon.Style>
+                        <Style TargetType="ui:SymbolIcon">
+                            <Setter Property="Symbol" Value="CheckmarkCircle48" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasScanned}" Value="False">
+                                    <Setter Property="Symbol" Value="ArrowSync24" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:SymbolIcon.Style>
+                </ui:SymbolIcon>
                 <TextBlock Text="{Binding EmptyStateText}" FontSize="16" Margin="0,10,0,0" Opacity="0.7" />
             </StackPanel>
         </Grid>

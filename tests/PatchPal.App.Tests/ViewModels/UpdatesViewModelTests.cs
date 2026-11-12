@@ -226,6 +226,16 @@ public class UpdatesViewModelTests : IDisposable
             new ScanState(), new AppSettings());
         await vm.ScanAsync();
         Assert.Equal("Everything is up to date", vm.EmptyStateText);
+        Assert.True(vm.HasScanned);
+    }
+
+    [Fact]
+    public void EmptyState_BeforeAnyScan_DoesNotClaimUpToDate()
+    {
+        // With scan on launch off, nothing has been checked yet.
+        var (vm, _) = Setup();
+        Assert.False(vm.HasScanned);
+        Assert.Equal("No scan yet. Click Scan to check for updates.", vm.EmptyStateText);
     }
 
     // winget lists Edge as upgradable, but its MSI-only package can't upgrade the copy Windows
