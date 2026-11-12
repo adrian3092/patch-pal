@@ -10,7 +10,7 @@ public sealed record HistoryGroup(DateOnly Date, IReadOnlyList<HistoryEntry> Ent
 {
     public string Title => Date == DateOnly.FromDateTime(DateTime.Today) ? "Today"
         : Date == DateOnly.FromDateTime(DateTime.Today.AddDays(-1)) ? "Yesterday"
-        : Date.ToString("d MMMM yyyy");
+        : LocalFormat.Date(Date);
 }
 
 public sealed partial class HistoryViewModel(HistoryStore store) : ObservableObject

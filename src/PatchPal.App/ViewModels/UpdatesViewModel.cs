@@ -122,13 +122,13 @@ public sealed partial class UpdatesViewModel : ObservableObject
                 Warnings.Add("No package manager detected (winget, Scoop, Chocolatey), so updates cannot be checked.");
             OnPropertyChanged(nameof(EmptyStateText));
 
-            LastScanText = $"Last scanned {now:HH:mm}";
+            LastScanText = $"Last scanned {LocalFormat.Time(now)}";
         }
         catch (OperationCanceledException)
         {
             // The previous results stay on screen, so keep their time.
             LastScanText = _scanState.LastScanTime is { } last
-                ? $"Scan cancelled · last scanned {last:HH:mm}"
+                ? $"Scan cancelled · last scanned {LocalFormat.Time(last)}"
                 : "Scan cancelled";
         }
         finally
