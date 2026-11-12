@@ -2,7 +2,7 @@
 
 A native Windows 11-style app that scans your installed programs and tells you which ones have updates available.
 
-It reads the same uninstall registry keys that **Programs and Features** uses, then cross-references them against three of the most popular Windows package managers (**winget**, **Scoop**, and **Chocolatey**) to find updates. One-click updates for any program a package manager can update, with a persisted update history so you can see what changed and when.
+It reads the same uninstall registry keys that **Programs and Features** uses, then cross-references them against three of the most popular Windows package managers (**winget**, **Scoop**, and **Chocolatey**) to find updates. Any program a package manager can update is one click away, and an update history shows what changed and when.
 
 Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero telemetry. Ships as a single self-contained exe, so no .NET install is needed.
 
@@ -19,13 +19,6 @@ Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero
 - Headless CLI mode for scheduled tasks (`--no-gui`, `--export-csv`, `--export-html`).
 - Light / dark / system theme.
 - x64 and ARM64 builds.
-
-## Screenshots
-
-> Place screenshots in `docs/screenshots/` and reference them here.
->
-> ![GUI screenshot placeholder](docs/screenshots/gui.png)
-> ![HTML report placeholder](docs/screenshots/report.png)
 
 ## Requirements
 
@@ -47,7 +40,7 @@ Download the installer for your architecture from the [latest release](https://g
 - `PatchPal-Setup-x.y.z-x64.exe`: Intel/AMD PCs
 - `PatchPal-Setup-x.y.z-arm64.exe`: ARM PCs (Snapdragon, etc.)
 
-Run it, approve the administrator prompt, click through the wizard, launch from the Start menu. Setup installs Patch Pal for all users, into Program Files. Standard Add-or-Remove-Programs uninstall.
+Run it, approve the administrator prompt, click through the wizard, and launch Patch Pal from the Start menu. Setup installs it for all users, into Program Files. To uninstall, use **Settings → Apps → Installed apps** as usual.
 
 Patch Pal runs as administrator, so its files must sit in a folder only an administrator can change; otherwise any program running under your normal account could swap them and get admin rights the next time you open Patch Pal. If you installed 2.1.0 or earlier "just for me" (into `%LOCALAPPDATA%\Programs\PatchPal`), setup removes that copy and keeps your settings and history. If it can't, it says so at the end; remove the old copy from **Settings → Apps → Installed apps**. Setup can't see that copy when a different administrator account approves the prompt; remove it the same way.
 
@@ -110,7 +103,7 @@ Exit code `0` on success, `1` on error. The CLI is scan/export only; running upg
 
 ## Schedule a daily check
 
-Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the report path; the exe path is where the installer puts it). The task runs as administrator, so it must point at a copy only an administrator can change, such as the one in Program Files, never one in your user folder. `-RunLevel Highest` is required: Patch Pal requests administrator rights, and a task without it cannot show the UAC prompt:
+Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the report path; the exe path is where the installer puts it). The task runs as administrator, so it must point at a copy only an administrator can change, such as the one in Program Files, never one in your user folder. `-RunLevel Highest` is required: Patch Pal requests administrator rights, and a task without it can't show the UAC prompt.
 
 ```powershell
 $action  = New-ScheduledTaskAction -Execute "$env:ProgramFiles\PatchPal\PatchPal.exe" `
@@ -164,7 +157,7 @@ The exe bundles the entire .NET runtime so it runs on any machine with zero prer
 "Not tracked" means the program isn't in any of the package-manager catalogs, so Patch Pal can't see or apply updates for it; it can only report on what winget/Scoop/Chocolatey know about. For full coverage, install winget at minimum.
 
 **Does it support PortableApps / Microsoft Store / Steam / etc.?**
-Microsoft Store apps appear if winget can see them (it usually can). Steam and other store-managed apps are reported as installed but updates are managed by their own clients.
+Microsoft Store apps appear if winget can see them (it usually can). Steam and other store-managed apps are listed as installed, but their own clients handle their updates.
 
 **Why does Microsoft Edge say "Updates itself" instead of offering an update?**
 Windows installs Edge with Edge's own installer, but winget only has Edge as an MSI package, and winget refuses to upgrade across installer types. Edge keeps itself current through Edge Update; to update right away, open Edge and go to **Settings → About Microsoft Edge**.
@@ -179,7 +172,7 @@ Scoop is a per-user tool, so Patch Pal runs it with your normal rights, not as a
 Each GitHub release includes a `SHA256SUMS.txt`. Verify a downloaded artifact:
 
 ```powershell
-Get-FileHash .\PatchPal-Setup-2.0.0-x64.exe -Algorithm SHA256
+Get-FileHash .\PatchPal-Setup-2.2.0-x64.exe -Algorithm SHA256
 ```
 
 Compare against the published hash before running. Releases signed with [Azure Artifact Signing](docs/SIGNING.md) also carry an Authenticode signature; check the file's **Properties → Digital Signatures** tab. Releases up to v2.2.0 are unsigned.
@@ -191,20 +184,20 @@ Patch Pal does not send any information to other networked systems unless the us
 ## Building releases
 
 ```powershell
-# Publish the self-contained exe (per architecture)
+# Publish the self-contained exe (per architecture). WPF's native *_cor3.dll files
+# land beside PatchPal.exe and must ship with it.
 dotnet publish src/PatchPal.App -c Release -r win-x64 --self-contained `
-  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
-  -o dist/publish-x64
+  -p:PublishSingleFile=true -o dist/publish-x64
 
 # Build the installer (requires Inno Setup 6 installed)
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
-  /DMyAppVersion=2.0.0 /DMyAppArch=x64 /DMySourceDir=..\dist\publish-x64 `
+  /DMyAppVersion=2.2.0 /DMyAppArch=x64 /DMySourceDir=..\dist\publish-x64 `
   installer\setup.iss
 ```
 
 Swap `win-x64` / `x64` for `win-arm64` / `arm64` to build the ARM64 artifacts.
 
-CI builds run automatically on tag push: `git tag v2.0.1 && git push --tags`. See [`.github/workflows/release.yml`](.github/workflows/release.yml) and [`docs/SIGNING.md`](docs/SIGNING.md) for details.
+CI builds a draft release when a version tag is pushed: `git tag v2.3.0 && git push --tags`. See [`.github/workflows/release.yml`](.github/workflows/release.yml) and [`docs/SIGNING.md`](docs/SIGNING.md) for details.
 
 ## Contributing
 

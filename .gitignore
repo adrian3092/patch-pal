@@ -17,8 +17,6 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
-# Brainstorming session artifacts
-
 # Build/release artifacts
 dist/
 release/
@@ -32,5 +30,3 @@ obj/
 
 # Test/smoke artifacts
 smoke-*.txt
-
-# Local editor/assistant settings

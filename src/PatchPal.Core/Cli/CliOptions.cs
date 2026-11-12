@@ -4,7 +4,7 @@ using PatchPal.Core.Settings;
 namespace PatchPal.Core.Cli;
 
 /// <summary>
-/// Parsed command-line options. Mode rule (per spec): --no-gui and the export flags run
+/// Parsed command-line options. --no-gui and the export flags run
 /// headless; --source and --include-system-components also apply when launching the GUI.
 /// </summary>
 public sealed record CliOptions(

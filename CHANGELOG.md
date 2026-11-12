@@ -7,7 +7,6 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 ## [Unreleased]
 
 ### Changed
-
 - Releases are set up to be code signed with Azure Artifact Signing (`docs/SIGNING.md`); signing switches on once the Azure account is in place.
 - The README's SignPath code signing policy is replaced by a short Privacy section.
 
@@ -44,8 +43,8 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   Edge WebView2 Runtime used to take over Microsoft Edge's row and push Edge off the list.
   When two registry entries share one update, both now stay on All apps and in exports; the
   extra one is marked "Duplicate entry" instead of disappearing.
-- Switching every package source off in Settings now does that. It used to ask every package
-  manager anyway. The Updates page and headless runs now say the sources are switched off,
+- Switching off every package source in Settings now really switches them off. Patch Pal used
+  to query every package manager anyway. The Updates page and headless runs now say the sources are switched off,
   instead of "no package manager detected".
 - **"Launch Patch Pal" at the end of setup works.** It failed with "CreateProcess failed;
   code 740" because Patch Pal needs administrator rights; it now shows the usual UAC prompt.
@@ -123,7 +122,7 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
 - **Breaking:** CLI flags renamed (`-NoGui` → `--no-gui`, `-ExportCsv` → `--export-csv`,
   `-ExportHtml` → `--export-html`, `-Source` → `--source`,
   `-IncludeSystemComponents` → `--include-system-components`). Update scheduled tasks
-  to invoke `PatchPal.exe`; see the README migration table.
+  to invoke `PatchPal.exe` with the new flags.
 - Failed package-manager queries now surface as visible warnings instead of being
   silently treated as "no updates".
 - v1's "Up to date / unknown" status is split in two: "Up to date" (a package manager

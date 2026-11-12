@@ -16,14 +16,13 @@ public partial class MainWindow : FluentWindow
         ThemeApplier.Apply(AppServices.Settings.Theme);
         if (AppServices.Settings.Theme == ThemePreference.System)
         {
-            // v4 adaptation: Watch(window, backdropType, updateAccents) replaces ApplySystemTheme().
+            // WPF-UI v4: Watch(window, backdropType, updateAccents) replaces ApplySystemTheme().
             SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, updateAccents: true);
         }
 
         AppServices.SnackbarService.SetSnackbarPresenter(RootSnackbar);
 
-        // v4 adaptation: NavigationViewItem.Click is only on INavigationViewItem interface;
-        // cast to the interface to subscribe.
+        // WPF-UI v4: Click is only on the INavigationViewItem interface, so cast to it to subscribe.
         ((INavigationViewItem)AboutItem).Click += OnAboutClicked;
 
         Loaded += (_, _) => RootNavigation.Navigate(typeof(Views.Pages.UpdatesPage));
