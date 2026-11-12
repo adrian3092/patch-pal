@@ -79,6 +79,42 @@ public class UpdatesViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Rescan_KeepsAFailedUpdatesMessage()
+    {
+        // The page rescans right after a batch; the reason an update failed must still be there to read.
+        var (vm, runner) = Setup();
+        await vm.ScanAsync();
+        runner.ExitCode = 1603;
+        await vm.UpdateAllAsync();
+        var message = vm.Rows[0].StateMessage;
+
+        runner.ExitCode = 0;
+        await vm.ScanAsync();
+
+        var row = Assert.Single(vm.Rows);
+        Assert.Equal(RowState.Failed, row.State);
+        Assert.Equal(message, row.StateMessage);
+        Assert.True(row.CanUpdate);                              // it can still be retried
+    }
+
+    [Fact]
+    public async Task Rescan_ANewerVersion_StartsTheRowAfresh()
+    {
+        var (vm, runner) = Setup();
+        await vm.ScanAsync();
+        runner.ExitCode = 1603;
+        await vm.UpdateAllAsync();
+
+        runner.ExitCode = 0;
+        runner.ListOutput = "7zip|23.01|24.09|false\n";          // the failure was about 24.08
+        await vm.ScanAsync();
+
+        var row = Assert.Single(vm.Rows);
+        Assert.Equal(RowState.Idle, row.State);
+        Assert.Equal("", row.StateMessage);
+    }
+
+    [Fact]
     public async Task UpdateAll_HistoryCannotBeSaved_FinishesAndSaysSo()
     {
         // The update itself worked; only its History entry couldn't be written. That used to

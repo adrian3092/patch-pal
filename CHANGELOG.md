@@ -18,6 +18,9 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - The exe is about 20 MB smaller.
 
 ### Fixed
+- **A failed update's reason stays on screen.** The Updates page rescans when a batch finishes,
+  and the rescan wiped every failure message a moment after it appeared. A failed update now
+  keeps its message after the rescan, until you retry it or a newer version is offered.
 - **Failed updates on ARM PCs say why.** winget often has only an x64 installer for an app, and
   some apps refuse to install that on ARM (NordVPN and VeraCrypt, for example). When an update
   fails on an ARM PC, Patch Pal now checks whether winget has an ARM64 installer for the app;
