@@ -34,7 +34,7 @@ Individual developers must live in the US or Canada. Billing starts when the sig
 5. **Create a certificate profile** of type *Public Trust* once validation succeeds. Note its name.
 6. **Let GitHub Actions sign:**
    - In Microsoft Entra ID, create an app registration (for example `patch-pal-signing`).
-   - Under **Certificates & secrets → Federated credentials**, add a GitHub Actions credential for `adrian3092/patch-pal`, entity type **Environment**, name `release`. The workflow's build job runs in that environment for both tag runs and runs started by hand. In GitHub (Settings → Environments → `release`), limit it to the `main` branch and `v*` tags so other branches can't sign.
+   - Under **Certificates & secrets → Federated credentials**, add a GitHub Actions credential for `adrian3092/patch-pal`, entity type **Environment**, name `release`. GitHub now sends the subject with account and repository IDs (`repo:adrian3092@13767006/patch-pal@1231140975:environment:release`), so enter that as a custom subject if the plain `repo:adrian3092/patch-pal:environment:release` is rejected; the failed login prints the exact subject. The workflow's build job runs in that environment for both tag runs and runs started by hand. In GitHub (Settings → Environments → `release`), limit it to the `main` branch and `v*` tags so other branches can't sign.
    - On the signing account, give that app the role *Artifact Signing Certificate Profile Signer*.
 7. **Add to the GitHub repo** (Settings → Secrets and variables → Actions):
    - Secrets: `AZURE_CLIENT_ID` (the app's client ID), `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
