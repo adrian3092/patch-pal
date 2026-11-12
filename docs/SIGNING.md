@@ -28,8 +28,8 @@ From the [SignPath Foundation terms](https://signpath.org/terms.html):
 2. **After approval, in SignPath:**
    - Create the project `patch-pal` and link the GitHub repository as its trusted build system.
    - Create two artifact configurations, each restricted to product name `Patch Pal` and the release version:
-     - `exe` — signs the two `PatchPal.exe` builds (x64 and arm64) before they are packaged.
-     - `installer` — signs the two `PatchPal-Setup-*.exe` installers.
+     - `exe`: signs the two `PatchPal.exe` builds (x64 and arm64) before they are packaged.
+     - `installer`: signs the two `PatchPal-Setup-*.exe` installers.
    - Create the signing policy `release-signing` with manual approval.
    - Add a CI API token to the GitHub repo as the secret `SIGNPATH_API_TOKEN`, and the SignPath organization ID as the repository variable `SIGNPATH_ORGANIZATION_ID`.
 3. **Wire up `.github/workflows/release.yml`** with two signing requests, using `signpath/github-action-submit-signing-request`:

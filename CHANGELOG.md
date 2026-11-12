@@ -103,8 +103,8 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
 - Persisted update history (%APPDATA%\PatchPal) with captured failure logs.
 - Settings page: theme (System/Light/Dark), scan on launch, per-source toggles,
   system-components toggle.
-- Self-contained single-exe builds for x64 and ARM64 — no PowerShell or .NET install needed.
-- Parallel source queries — scans are faster than v1.
+- Self-contained single-exe builds for x64 and ARM64; no PowerShell or .NET install needed.
+- Parallel source queries, so scans are faster than v1.
 - Patch Pal band-aid icon on the exe, the title bar, and the installer.
 
 ### Changed
@@ -118,7 +118,7 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
 - **Breaking:** CLI flags renamed (`-NoGui` → `--no-gui`, `-ExportCsv` → `--export-csv`,
   `-ExportHtml` → `--export-html`, `-Source` → `--source`,
   `-IncludeSystemComponents` → `--include-system-components`). Update scheduled tasks
-  to invoke `PatchPal.exe` — see the README migration table.
+  to invoke `PatchPal.exe`; see the README migration table.
 - Failed package-manager queries now surface as visible warnings instead of being
   silently treated as "no updates".
 - v1's "Up to date / unknown" status is split in two: "Up to date" (a package manager
@@ -134,7 +134,7 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
   Edge with Edge's own installer, but winget only has Edge as an MSI, so
   `winget upgrade` refuses it (`0x8A15008E`, install technology mismatch). Edge's
   row now reads "Updates itself" instead of showing an Update button, and Update all
-  skips it — Edge Update keeps Edge current.
+  skips it, because Edge Update keeps Edge current.
 - An upgrade that winget refuses because of an install technology mismatch now
   explains why instead of showing a raw exit code.
 - An upgrade that fails for lack of an internet connection (winget `0x8A150107`) no
@@ -173,7 +173,7 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
 ### Added
 - Version-aware update detection: a row is only flagged when the available
   version is genuinely newer than what's installed.
-- `tests/Merge.Tests.ps1` — assertion suite for the matching/merge logic, with a
+- `tests/Merge.Tests.ps1`: assertion suite for the matching/merge logic, with a
   dot-source guard so the script can be loaded for testing without launching the GUI.
 
 ## [1.0.1] - 2026-05-06
@@ -183,7 +183,7 @@ Complete rewrite and rename: WinUpdateChecker is now **Patch Pal**, a native C#/
 - About dialog now displays OS architecture and PowerShell version alongside the app version.
 
 ### Notes
-- No code-path changes for ARM64 — the tool was already architecture-agnostic. This release makes that explicit and surfaces it in the UI.
+- No code-path changes for ARM64; the tool was already architecture-agnostic. This release makes that explicit and surfaces it in the UI.
 - Inno Setup config comments clarify that `x64compatible` covers both x64 and ARM64 install modes.
 
 ## [1.0.0] - 2026-05-06
@@ -204,6 +204,6 @@ Initial public release.
 ### Distribution
 - Inno Setup installer (`installer/setup.iss`) producing `WinUpdateChecker-Setup-x.y.z.exe`.
 - Portable zip artifact built alongside the installer.
-- GitHub Actions release workflow (`.github/workflows/release.yml`) — tag push builds installer, zip, and `SHA256SUMS.txt`, then drafts a release.
+- GitHub Actions release workflow (`.github/workflows/release.yml`): tag push builds installer, zip, and `SHA256SUMS.txt`, then drafts a release.
 - Authenticode signing helper (`tools/Sign-Script.ps1`).
 - Signing documentation including SignPath OSS application steps (`docs/SIGNING.md`).

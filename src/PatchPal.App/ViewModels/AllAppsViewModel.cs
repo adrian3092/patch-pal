@@ -22,7 +22,7 @@ public sealed partial class AllAppsViewModel(ScanState scanState) : ObservableOb
         var result = scanState.LastResult;
         if (result is null)
         {
-            SummaryText = "No scan yet — run a scan from the Updates page";
+            SummaryText = "No scan yet. Run a scan from the Updates page";
             return;
         }
         foreach (var row in result.Rows)

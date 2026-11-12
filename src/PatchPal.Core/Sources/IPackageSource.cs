@@ -19,7 +19,7 @@ public interface IPackageSource
     /// <summary>
     /// Invoke the manager's upgrade command for a package id, from <paramref name="repository"/>
     /// when the manager named one. Callers MUST validate both with
-    /// <see cref="Upgrading.PackageIdValidator"/> first — UpgradeRunner enforces this.
+    /// <see cref="Upgrading.PackageIdValidator"/> first; UpgradeRunner enforces this.
     /// </summary>
     Task<ProcessResult> RunUpgradeAsync(string packageId, string? repository = null, CancellationToken ct = default);
 }

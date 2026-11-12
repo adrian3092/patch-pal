@@ -25,7 +25,7 @@ public static class CliRunner
     public static Task<int> RunAsync(CliOptions options)
     {
         try { Console.OutputEncoding = System.Text.Encoding.UTF8; }
-        catch (IOException) { /* no console handle — keep default */ }
+        catch (IOException) { /* no console handle; keep default */ }
 
         var runner = new ProcessRunner();
         var sources = new IPackageSource[] { new WingetSource(runner), new ScoopSource(runner), new ChocoSource(runner, new ChocolateyLocator()) };

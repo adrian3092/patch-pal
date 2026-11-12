@@ -39,7 +39,7 @@ public sealed record ScanResult(
 /// <summary>
 /// Runs a full scan: registry read and all enabled source queries in parallel
 /// (v1 ran them sequentially), then merges. A source that fails to query becomes
-/// a warning — never a scan failure.
+/// a warning, never a scan failure.
 /// </summary>
 public sealed class ScanService(IInstalledProgramProvider programProvider, IEnumerable<IPackageSource> sources)
 {
@@ -83,7 +83,7 @@ public sealed class ScanService(IInstalledProgramProvider programProvider, IEnum
         }
         catch (Exception ex)
         {
-            return ([], $"{source.Name} query failed — results may be incomplete ({ex.Message})");
+            return ([], $"{source.Name} query failed; results may be incomplete ({ex.Message})");
         }
     }
 }

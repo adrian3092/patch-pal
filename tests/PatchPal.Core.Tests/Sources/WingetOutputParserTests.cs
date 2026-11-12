@@ -131,7 +131,7 @@ public class WingetOutputParserTests
     [Fact]
     public void Parse_ReadsKoreanOutput_WithSpacedHeadersAndWideCharacters()
     {
-        // ko-KR labels: 이름 (4 cells), 장치 ID (7), 버전 (4), 사용 가능 (9), 원본 — two contain spaces.
+        // ko-KR labels: 이름 (4 cells), 장치 ID (7), 버전 (4), 사용 가능 (9), 원본; two contain spaces.
         var raw = string.Join('\n',
             Cell("이름", 4, 8) + Cell("장치 ID", 7, 15) + Cell("버전", 4, 6) + Cell("사용 가능", 9, 9) + "원본",
             new string('-', 48),

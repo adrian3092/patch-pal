@@ -16,7 +16,7 @@ public sealed class ProcessRunner : IProcessRunner
     {
         // v1 used PowerShell's Get-Command, which resolves App Execution Aliases
         // (winget) and shims (scoop.cmd). File.Exists over PATH misses alias reparse
-        // stubs, so ask where.exe — its exit code is authoritative.
+        // stubs, so ask where.exe; its exit code is authoritative.
         try
         {
             var psi = new ProcessStartInfo(WindowsTools.WherePath, command)

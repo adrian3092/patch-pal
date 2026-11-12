@@ -6,7 +6,7 @@ namespace PatchPal.Core.Scanning;
 
 /// <summary>
 /// Reads installed programs from the HKLM/HKCU uninstall keys (including WOW6432Node),
-/// ported from v1 Get-InstalledPrograms. Thin registry walk — the filter rules live in
+/// ported from v1 Get-InstalledPrograms. Thin registry walk; the filter rules live in
 /// <see cref="RegistryEntryFilter"/> where they are unit-tested.
 /// </summary>
 public sealed class RegistryScanner : IInstalledProgramProvider
@@ -56,7 +56,7 @@ public sealed class RegistryScanner : IInstalledProgramProvider
                 }
                 catch (Exception ex) when (ex is SecurityException or IOException or UnauthorizedAccessException)
                 {
-                    // corrupt or access-denied key — skip it, matching v1's SilentlyContinue
+                    // corrupt or access-denied key: skip it, matching v1's SilentlyContinue
                 }
             }
         }

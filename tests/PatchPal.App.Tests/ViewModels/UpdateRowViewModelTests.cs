@@ -13,11 +13,11 @@ public class UpdateRowViewModelTests
     {
         // The row trims a long message to keep the app name visible; hovering shows all of it.
         var row = GitRow();
-        row.StateMessage = "Installed by a different installer type — update it from within the app.";
+        row.StateMessage = "Installed by a different installer type. Update it from within the app.";
         row.Log = "A newer version was found, but the install technology is different.";
 
         Assert.Equal(
-            "Installed by a different installer type — update it from within the app.\n\n" +
+            "Installed by a different installer type. Update it from within the app.\n\n" +
             "A newer version was found, but the install technology is different.",
             row.FailureDetails);
     }

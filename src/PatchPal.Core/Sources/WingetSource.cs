@@ -15,7 +15,7 @@ public sealed class WingetSource(IProcessRunner runner) : IPackageSource
         var upgrades = WingetOutputParser.Parse(result.StdOut);
         if (upgrades.Count > 0) return upgrades;
         // A non-zero exit with no parsable table means the query itself failed (e.g. the
-        // winget alias couldn't be executed). Never report that as "no updates" — throw so
+        // winget alias couldn't be executed). Never report that as "no updates"; throw so
         // ScanService surfaces a warning instead.
         if (result.ExitCode != 0)
             throw new InvalidOperationException(SourceErrors.FirstLine(result.StdErr) ?? $"exit code {result.ExitCode}");

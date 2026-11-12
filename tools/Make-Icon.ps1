@@ -2,8 +2,8 @@ param(
     [string]$OutDir = 'assets\icon'
 )
 # Draws the Patch Pal app icon (band-aid on a Fluent-blue rounded square) with
-# GDI+ at each standard icon size. Each size is drawn from vectors — no
-# downscaling — so small sizes stay crisp; fine details drop out below 32 px.
+# GDI+ at each standard icon size. Each size is drawn from vectors (no
+# downscaling), so small sizes stay crisp; fine details drop out below 32 px.
 Add-Type -AssemblyName System.Drawing
 
 function New-RoundedRect([float]$x, [float]$y, [float]$w, [float]$h, [float]$r) {
@@ -48,7 +48,7 @@ function Draw-Icon([System.Drawing.Graphics]$g, [int]$size) {
     $g.FillPath($padBrush, $pad)
     $padBrush.Dispose(); $pad.Dispose()
 
-    # Pad dots — skipped below 48 px, where they would just be noise.
+    # Pad dots: skipped below 48 px, where they would just be noise.
     if ($size -ge 48) {
         $dot = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 124, 178, 224))
         $r = 7 * $s

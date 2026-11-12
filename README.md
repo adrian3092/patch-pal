@@ -2,11 +2,11 @@
 
 A native Windows 11-style app that scans your installed programs and tells you which ones have updates available.
 
-It reads the same uninstall registry keys that **Programs and Features** uses, then cross-references them against three of the most popular Windows package managers — **winget**, **Scoop**, and **Chocolatey** — to find updates. One-click updates for any program a package manager can update, with a persisted update history so you can see what changed and when.
+It reads the same uninstall registry keys that **Programs and Features** uses, then cross-references them against three of the most popular Windows package managers (**winget**, **Scoop**, and **Chocolatey**) to find updates. One-click updates for any program a package manager can update, with a persisted update history so you can see what changed and when.
 
-Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero telemetry. Ships as a single self-contained exe — no .NET install needed.
+Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero telemetry. Ships as a single self-contained exe, so no .NET install is needed.
 
-> **v2.0 is a complete rewrite — and a rename.** v1 shipped as **WinUpdateChecker**, a PowerShell + WinForms script; v2 is a native application called **Patch Pal**. Installing v2 upgrades an existing v1 install in place, and your settings and update history carry over. See the [CHANGELOG](CHANGELOG.md) and the [Migrating from v1.x](#migrating-from-v1x) section below.
+> **v2.0 is a complete rewrite and a rename.** v1 shipped as **WinUpdateChecker**, a PowerShell + WinForms script; v2 is a native application called **Patch Pal**. Installing v2 upgrades an existing v1 install in place, and your settings and update history carry over. See the [CHANGELOG](CHANGELOG.md) and the [Migrating from v1.x](#migrating-from-v1x) section below.
 
 ---
 
@@ -14,7 +14,7 @@ Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero
 
 - Fluent (Windows 11-style) GUI with sidebar navigation: **Updates**, **All apps**, **History**, **Settings**.
 - Scans installed programs from the Windows registry (HKLM + HKCU + WOW6432Node).
-- Queries every package manager you have installed (winget / Scoop / Chocolatey) — in parallel, so scans are fast.
+- Queries every package manager you have installed (winget / Scoop / Chocolatey) in parallel, so scans are fast.
 - Per-row and bulk updates with live in-place progress.
 - Persisted update history with captured failure logs for troubleshooting.
 - Export to **CSV** or a stand-alone **HTML report** via the CLI.
@@ -31,23 +31,23 @@ Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero
 
 ## Requirements
 
-- Windows 10 1809+ or Windows 11 — **x64 or ARM64** (Snapdragon Copilot+ PCs, Windows Dev Kit, etc.).
+- Windows 10 1809+ or Windows 11, **x64 or ARM64** (Snapdragon Copilot+ PCs, Windows Dev Kit, etc.).
 - At least one of these for update detection:
-  - [winget](https://learn.microsoft.com/windows/package-manager/winget/) — pre-installed on modern Windows; otherwise install **App Installer** from the Microsoft Store.
-  - [Scoop](https://scoop.sh/) — optional.
-  - [Chocolatey](https://chocolatey.org/) — optional.
-- **No .NET runtime needed** — the exe is fully self-contained.
+  - [winget](https://learn.microsoft.com/windows/package-manager/winget/): pre-installed on modern Windows; otherwise install **App Installer** from the Microsoft Store.
+  - [Scoop](https://scoop.sh/): optional.
+  - [Chocolatey](https://chocolatey.org/): optional.
+- **No .NET runtime needed**: the exe is fully self-contained.
 
 ## Install
 
-Pick whichever you prefer — both ship from the same GitHub release page, per architecture.
+Pick whichever you prefer; both ship from the same GitHub release page, per architecture.
 
 ### Installer (recommended for most users)
 
 Download the installer for your architecture from the [latest release](https://github.com/adrian3092/patch-pal/releases/latest):
 
-- `PatchPal-Setup-x.y.z-x64.exe` — Intel/AMD PCs
-- `PatchPal-Setup-x.y.z-arm64.exe` — ARM PCs (Snapdragon, etc.)
+- `PatchPal-Setup-x.y.z-x64.exe`: Intel/AMD PCs
+- `PatchPal-Setup-x.y.z-arm64.exe`: ARM PCs (Snapdragon, etc.)
 
 Run it, approve the administrator prompt, click through the wizard, launch from the Start menu. Setup installs Patch Pal for all users, into Program Files. Standard Add-or-Remove-Programs uninstall. Installing v2 over an existing v1 install upgrades it in place.
 
@@ -108,11 +108,11 @@ PatchPal.exe --no-gui --source scoop,chocolatey
 PatchPal.exe --no-gui --include-system-components
 ```
 
-Exit code `0` on success, `1` on error. The CLI is scan/export only — running upgrades is done from the GUI.
+Exit code `0` on success, `1` on error. The CLI is scan/export only; running upgrades is done from the GUI.
 
 ## Migrating from v1.x
 
-v2 removes `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat` — the installer deletes them from an existing install when you upgrade. Anything that invoked the script (scheduled tasks, shortcuts, wrapper scripts) must be updated to call the exe:
+v2 removes `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat`, and the installer deletes them from an existing install when you upgrade. Anything that invoked the script (scheduled tasks, shortcuts, wrapper scripts) must be updated to call the exe:
 
 | v1 (PowerShell) | v2 |
 |---|---|
@@ -125,7 +125,7 @@ v2 removes `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat` — the install
 
 ## Schedule a daily check
 
-Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the report path; the exe path is where the installer puts it). The task runs as administrator, so it must point at a copy only an administrator can change, such as the one in Program Files, never one in your user folder. `-RunLevel Highest` is required — Patch Pal requests administrator rights, and a task without it cannot show the UAC prompt:
+Run this once in an admin PowerShell window. It creates a Task Scheduler job that writes a fresh HTML report at 9 a.m. (adjust the report path; the exe path is where the installer puts it). The task runs as administrator, so it must point at a copy only an administrator can change, such as the one in Program Files, never one in your user folder. `-RunLevel Highest` is required: Patch Pal requests administrator rights, and a task without it cannot show the UAC prompt:
 
 ```powershell
 $action  = New-ScheduledTaskAction -Execute "$env:ProgramFiles\PatchPal\PatchPal.exe" `
@@ -173,19 +173,19 @@ No. It only reads the registry and queries package managers. Updates only run wh
 SmartScreen warns on unsigned downloads it hasn't seen before. Right-click the zip → Properties → Unblock before extracting, or click **More info → Run anyway** on the installer. Verify the SHA-256 hash first (see below).
 
 **Why is the download ~80 MB?**
-The exe bundles the entire .NET runtime so it runs on any machine with zero prerequisites — no .NET install, no PowerShell version requirements.
+The exe bundles the entire .NET runtime so it runs on any machine with zero prerequisites: no .NET install, no PowerShell version requirements.
 
 **A program shows "Not tracked" but I know there's an update.**
-"Not tracked" means the program isn't in any of the package-manager catalogs, so Patch Pal can't see or apply updates for it — it can only report on what winget/Scoop/Chocolatey know about. For full coverage, install winget at minimum.
+"Not tracked" means the program isn't in any of the package-manager catalogs, so Patch Pal can't see or apply updates for it; it can only report on what winget/Scoop/Chocolatey know about. For full coverage, install winget at minimum.
 
 **Does it support PortableApps / Microsoft Store / Steam / etc.?**
 Microsoft Store apps appear if winget can see them (it usually can). Steam and other store-managed apps are reported as installed but updates are managed by their own clients.
 
 **Why does Microsoft Edge say "Updates itself" instead of offering an update?**
-Windows installs Edge with Edge's own installer, but winget only has Edge as an MSI package — and winget refuses to upgrade across installer types. Edge keeps itself current through Edge Update; to update right away, open Edge and go to **Settings → About Microsoft Edge**.
+Windows installs Edge with Edge's own installer, but winget only has Edge as an MSI package, and winget refuses to upgrade across installer types. Edge keeps itself current through Edge Update; to update right away, open Edge and go to **Settings → About Microsoft Edge**.
 
 **Why does it ask for administrator rights at launch?**
-winget and Chocolatey need admin rights to update machine-wide installs. Asking once at startup means no per-update UAC prompts and no flashing console windows — and lets Patch Pal capture each upgrade's output for the History page. Standard-user accounts will need an administrator to approve the prompt.
+winget and Chocolatey need admin rights to update machine-wide installs. Asking once at startup means no per-update UAC prompts and no flashing console windows, and it lets Patch Pal capture each upgrade's output for the History page. Standard-user accounts will need an administrator to approve the prompt.
 
 Scoop is a per-user tool, so Patch Pal runs it with your normal rights, not as admin. Scoop apps installed for all users (`scoop install -g`) need admin to update; Patch Pal won't run Scoop as admin for them, so update those from an admin prompt with `scoop update -g <app>`. Chocolatey is used only when it's installed in a folder only an administrator can change, as its installer sets it up.
 
@@ -197,7 +197,7 @@ Each GitHub release includes a `SHA256SUMS.txt`. Verify a downloaded artifact:
 Get-FileHash .\PatchPal-Setup-2.0.0-x64.exe -Algorithm SHA256
 ```
 
-Compare against the published hash before running. Once the project is enrolled in [SignPath OSS signing](docs/SIGNING.md), installer downloads will also carry a verifiable Authenticode signature — check the file's **Properties → Digital Signatures** tab.
+Compare against the published hash before running. Once the project is enrolled in [SignPath OSS signing](docs/SIGNING.md), installer downloads will also carry a verifiable Authenticode signature; check the file's **Properties → Digital Signatures** tab.
 
 ## Code signing policy
 
@@ -208,7 +208,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 
 Signed releases are built from this repository by GitHub Actions, and every release is approved by hand before it is signed. Releases published before the project joined the SignPath Foundation program (v2.0.0 and earlier) are unsigned.
 
-**Privacy policy:** This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. Patch Pal has no telemetry. To find and install updates it runs the package managers on your PC (winget, Scoop, Chocolatey), which contact their own servers under their own privacy policies — for winget, the [Microsoft Privacy Statement](https://privacy.microsoft.com/privacystatement).
+**Privacy policy:** This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. Patch Pal has no telemetry. To find and install updates it runs the package managers on your PC (winget, Scoop, Chocolatey), which contact their own servers under their own privacy policies (for winget, the [Microsoft Privacy Statement](https://privacy.microsoft.com/privacystatement).
 
 ## Building releases
 
@@ -234,7 +234,7 @@ PRs welcome. Please:
 
 1. Open an issue first for non-trivial changes.
 2. Use the .NET 8 SDK; `dotnet test` must pass.
-3. Keep `PatchPal.Core` UI-free — all WPF code lives in `PatchPal.App`.
+3. Keep `PatchPal.Core` UI-free; all WPF code lives in `PatchPal.App`.
 
 ## License
 
