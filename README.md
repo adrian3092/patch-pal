@@ -4,7 +4,7 @@ A native Windows 11-style app that scans your installed programs and tells you w
 
 It reads the same uninstall registry keys that **Programs and Features** uses, then cross-references them against three of the most popular Windows package managers (**winget**, **Scoop**, and **Chocolatey**) to find updates. Any program a package manager can update is one click away, and an update history shows what changed and when.
 
-Built in C# on .NET 8 with a Fluent (WPF) interface. Light and dark themes. Zero telemetry. Ships as a single self-contained exe, so no .NET install is needed.
+Built in C# on .NET 10 with a Fluent (WPF) interface. Light and dark themes. Zero telemetry. Ships as a single self-contained exe, so no .NET install is needed.
 
 ---
 
@@ -61,7 +61,7 @@ cd patch-pal
 dotnet run --project src/PatchPal.App
 ```
 
-Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
 
 ## Usage
 
@@ -150,7 +150,7 @@ No. It only reads the registry and queries package managers. Updates only run wh
 **Why does Windows say "Windows protected your PC"?**
 SmartScreen warns on unsigned downloads it hasn't seen before. Right-click the zip → Properties → Unblock before extracting, or click **More info → Run anyway** on the installer. Verify the SHA-256 hash first (see below).
 
-**Why is the download ~80 MB?**
+**Why is the download so big?**
 The exe bundles the entire .NET runtime so it runs on any machine with zero prerequisites: no .NET install, no PowerShell version requirements.
 
 **A program shows "Not tracked" but I know there's an update.**
@@ -204,7 +204,7 @@ CI builds a draft release when a version tag is pushed: `git tag v2.3.0 && git p
 PRs welcome. Please:
 
 1. Open an issue first for non-trivial changes.
-2. Use the .NET 8 SDK; `dotnet test` must pass.
+2. Use the .NET 10 SDK; `dotnet test` must pass.
 3. Keep `PatchPal.Core` UI-free; all WPF code lives in `PatchPal.App`.
 
 ## License
