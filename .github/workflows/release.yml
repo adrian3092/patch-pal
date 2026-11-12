@@ -27,7 +27,7 @@ jobs:
   build:
     needs: test
     runs-on: windows-latest
-    # Azure trusts sign-ins from this environment only (see docs/SIGNING.md).
+    # Azure accepts code-signing sign-ins only from this environment.
     environment: release
     steps:
       - name: Checkout
@@ -81,7 +81,7 @@ jobs:
             }
           }
 
-      # Code signing (docs/SIGNING.md). Skipped while ARTIFACT_SIGNING_ACCOUNT is unset.
+      # Code signing with Azure Artifact Signing. Skipped while ARTIFACT_SIGNING_ACCOUNT is unset.
       - name: Azure login
         if: vars.ARTIFACT_SIGNING_ACCOUNT != ''
         uses: azure/login@v3
