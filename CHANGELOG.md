@@ -12,6 +12,9 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   now on won't be fixed. The runtime ships inside the exe, so updating Patch Pal is all it takes.
 
 ### Changed
+- Times and dates follow your Windows region format: 12-hour (6:17 PM) in the US, 24-hour
+  (18:17) in most of Europe, and whichever you picked if you changed it in Windows Settings.
+  They were always 24-hour before.
 - The exe is about 20 MB smaller.
 
 ### Fixed

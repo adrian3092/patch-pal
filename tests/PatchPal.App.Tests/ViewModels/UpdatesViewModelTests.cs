@@ -284,6 +284,7 @@ public class UpdatesViewModelTests : IDisposable
     public async Task Scan_DoubleClick_DoesNotCancelTheScanItStarted()
     {
         // A double-click's second press lands on the same button, which by then reads "Cancel".
+        using var _ = new CultureScope("en-GB");
         var runner = new FakeRunner { ListGate = new TaskCompletionSource() };
         var clock = new ManualClock();
         var vm = ScanOnlyViewModel(runner, clock);
@@ -302,6 +303,7 @@ public class UpdatesViewModelTests : IDisposable
     public async Task Scan_Cancelled_KeepsTheLastScanTime()
     {
         // The previous results stay on screen after a cancel, so their time stays too.
+        using var _ = new CultureScope("en-GB");
         var runner = new FakeRunner();
         var clock = new ManualClock();
         var vm = ScanOnlyViewModel(runner, clock);
@@ -315,6 +317,21 @@ public class UpdatesViewModelTests : IDisposable
         await scanning;
 
         Assert.Equal("Scan cancelled · last scanned 09:30", vm.LastScanText);
+    }
+
+    [Theory]
+    [InlineData("en-GB", "Last scanned 09:30")]
+    [InlineData("de-DE", "Last scanned 09:30")]
+    [InlineData("en-US", "Last scanned 9:30 AM")]
+    public async Task Scan_ShowsTheTimeInTheRegionFormat(string culture, string expected)
+    {
+        using var _ = new CultureScope(culture);
+        var vm = ScanOnlyViewModel(new FakeRunner(), new ManualClock());
+
+        await vm.ScanAsync();                                    // 09:30
+
+        // ICU may put a narrow no-break space before AM/PM; compare it as a plain space.
+        Assert.Equal(expected, vm.LastScanText.Replace(' ', ' ').Replace(' ', ' '));
     }
 
     [Fact]

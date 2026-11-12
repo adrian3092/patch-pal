@@ -80,4 +80,16 @@ public class HistoryViewModelTests : IDisposable
         await vm.ClearCommand.ExecuteAsync(null);
         Assert.Single(store.Load());
     }
+
+    [Theory]
+    [InlineData("en-GB", "Wednesday, 5 March 2025")]
+    [InlineData("en-US", "Wednesday, March 5, 2025")]
+    public void GroupTitle_OlderDates_UseTheRegionFormat(string culture, string expected)
+    {
+        using var _ = new CultureScope(culture);
+
+        var group = new HistoryGroup(new DateOnly(2025, 3, 5), []);
+
+        Assert.Equal(expected, group.Title);
+    }
 }
