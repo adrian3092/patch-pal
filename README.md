@@ -47,7 +47,7 @@ Download the installer for your architecture from the [latest release](https://g
 - `PatchPal-Setup-x.y.z-x64.exe`: Intel/AMD PCs
 - `PatchPal-Setup-x.y.z-arm64.exe`: ARM PCs (Snapdragon, etc.)
 
-Run it, approve the administrator prompt, click through the wizard, launch from the Start menu. Setup installs Patch Pal for all users, into Program Files. Standard Add-or-Remove-Programs uninstall. Installing v2 over an existing v1 install upgrades it in place.
+Run it, approve the administrator prompt, click through the wizard, launch from the Start menu. Setup installs Patch Pal for all users, into Program Files. Standard Add-or-Remove-Programs uninstall.
 
 Patch Pal runs as administrator, so its files must sit in a folder only an administrator can change; otherwise any program running under your normal account could swap them and get admin rights the next time you open Patch Pal. If you installed 2.1.0 or earlier "just for me" (into `%LOCALAPPDATA%\Programs\PatchPal`), setup removes that copy and keeps your settings and history. If it can't, it says so at the end; remove the old copy from **Settings → Apps → Installed apps**. Setup can't see that copy when a different administrator account approves the prompt; remove it the same way.
 
@@ -107,19 +107,6 @@ PatchPal.exe --no-gui --include-system-components
 ```
 
 Exit code `0` on success, `1` on error. The CLI is scan/export only; running upgrades is done from the GUI.
-
-## Migrating from v1.x
-
-v2 removes `UpdateChecker.ps1`, `Run.bat`, and `Run-Console.bat`, and the installer deletes them from an existing install when you upgrade. Anything that invoked the script (scheduled tasks, shortcuts, wrapper scripts) must be updated to call the exe:
-
-| v1 (PowerShell) | v2 |
-|---|---|
-| `.\Run.bat` | `PatchPal.exe` |
-| `-NoGui` | `--no-gui` |
-| `-ExportCsv <path>` | `--export-csv <path>` |
-| `-ExportHtml <path>` | `--export-html <path>` |
-| `-Source winget,scoop` | `--source winget,scoop` |
-| `-IncludeSystemComponents` | `--include-system-components` |
 
 ## Schedule a daily check
 
