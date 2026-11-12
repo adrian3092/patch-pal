@@ -5,9 +5,8 @@ namespace PatchPal.App;
 
 /// <summary>
 /// Maps the persisted ThemePreference onto WPF-UI's theme manager.
-/// Adaptation from plan (v3) to v4: ApplySystemTheme() was removed; for System preference
-/// we derive the current system theme and apply it, relying on SystemThemeWatcher for
-/// subsequent auto-updates (wired in MainWindow).
+/// WPF-UI v4 removed ApplySystemTheme(), so for the System preference this reads the current
+/// system theme and applies it; SystemThemeWatcher (wired in MainWindow) follows later changes.
 /// </summary>
 public static class ThemeApplier
 {

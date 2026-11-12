@@ -37,7 +37,7 @@ public partial class UpdatesPage
             AppServices.SnackbarService.Show(
                 "Upgrade finished", message, appearance,
                 TimeSpan.FromSeconds(summary.HistoryError is null ? 5 : 10));
-            _ = _viewModel.ScanAsync();                          // spec: rescan after a batch
+            _ = _viewModel.ScanAsync();                          // rescan after a batch
         };
 
         Loaded += async (_, _) =>

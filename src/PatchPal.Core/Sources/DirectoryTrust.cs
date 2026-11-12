@@ -5,7 +5,7 @@ namespace PatchPal.Core.Sources;
 
 /// <summary>
 /// Owner + ACL checks for files and folders. Conservative: anything it can't read or doesn't
-/// recognise counts as not trusted. Deny entries are ignored, which can only make it stricter.
+/// recognize counts as not trusted. Deny entries are ignored, which can only make it stricter.
 /// Junctions and symlinks are never trusted: their owner can retarget them after the check.
 /// </summary>
 public sealed class DirectoryTrust : IDirectoryTrust

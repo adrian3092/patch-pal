@@ -9,13 +9,12 @@ namespace PatchPal.Core.Sources;
 
 /// <summary>
 /// Starts a hidden process with the user's normal rights and redirected output.
-/// Approach (spike, 2026-11-11, owner's PC): a restricted copy of this process's own token
-/// (<see cref="RestrictedUserToken"/>) passed to CreateProcessAsUser. A restricted copy of the
-/// caller's token needs no SeAssignPrimaryTokenPrivilege and no desktop, so it also works from a
+/// It passes a restricted copy of this process's own token (<see cref="RestrictedUserToken"/>)
+/// to CreateProcessAsUser. A restricted copy of the caller's token needs no SeAssignPrimaryTokenPrivilege and no desktop, so it also works from a
 /// scheduled task or --no-gui. It runs as the account Patch Pal runs as: after an over-the-shoulder
 /// UAC prompt that is the admin who typed the password, not the signed-in user.
-/// Verified: Medium IL, Administrators deny-only, normal privileges, user-owned files,
-/// exit code/output/tree-kill, and scoop status/update (including its powershell child).
+/// Tested on Windows 11: Medium IL, Administrators deny-only, normal privileges, user-owned
+/// files, exit code, output, tree kill, and scoop status/update (including its PowerShell child).
 /// </summary>
 internal static class UserProcessLauncher
 {
