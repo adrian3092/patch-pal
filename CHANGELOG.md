@@ -27,7 +27,10 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   if it doesn't, the update says so and suggests updating from within the app or with the
   publisher's ARM64 installer. The installer's own error stays in the log.
 - **Dark mode is readable.** Page titles and text were near-black on the dark background,
-  and the app lists on Updates and All apps sat on a white panel. Both now follow the theme.
+  the app lists on Updates and All apps sat on a white panel, and History's "View log" was
+  black. All now follow the theme.
+- Before the first scan (with scan on launch off), the Updates page no longer says "Everything
+  is up to date"; it says no scan has run yet.
 - On Settings, the description under "Include Windows system components" no longer runs
   into its switch.
 - Releases are set up to be code signed with Azure Artifact Signing (`docs/SIGNING.md`); signing switches on once the Azure account is in place.

@@ -60,8 +60,16 @@ public sealed partial class UpdatesViewModel : ObservableObject
 
     public string UpdateAllLabel => $"Update all ({UpdatableCount})";
 
-    /// <summary>Text for an empty list; never claims "up to date" while a source failed to answer.</summary>
-    public string EmptyStateText => Warnings.Count > 0 ? "No updates found" : "Everything is up to date";
+    /// <summary>Whether a scan has finished, here or on another page sharing the results.</summary>
+    public bool HasScanned => _scanState.LastResult is not null;
+
+    /// <summary>
+    /// Text for an empty list; never claims "up to date" before a scan or while a source failed to answer.
+    /// </summary>
+    public string EmptyStateText =>
+        !HasScanned ? "No scan yet. Click Scan to check for updates."
+        : Warnings.Count > 0 ? "No updates found"
+        : "Everything is up to date";
 
     public UpdatesViewModel() : this(
         AppServices.ScanService, AppServices.BatchUpgradeRunner, AppServices.ScanState, () => AppServices.Settings)
@@ -133,6 +141,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
                 Warnings.Add("Every package source is switched off in Settings, so updates aren't checked.");
             else if (result.EnabledSources.Count == 0)
                 Warnings.Add("No package manager detected (winget, Scoop, Chocolatey), so updates cannot be checked.");
+            OnPropertyChanged(nameof(HasScanned));
             OnPropertyChanged(nameof(EmptyStateText));
 
             LastScanText = $"Last scanned {LocalFormat.Time(now)}";
