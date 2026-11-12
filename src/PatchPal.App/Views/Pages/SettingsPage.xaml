@@ -4,7 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:PatchPal.App.ViewModels"
-    Title="Settings">
+    Title="Settings"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <StackPanel Margin="20,12,20,12" MaxWidth="680" HorizontalAlignment="Left">
         <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,14" />
 
@@ -26,11 +27,13 @@
         </Border>
         <Border CornerRadius="6" Padding="14,10" Background="{DynamicResource ControlFillColorDefaultBrush}" Margin="0,0,0,16">
             <DockPanel>
+                <ui:ToggleSwitch DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center"
+                                 IsChecked="{Binding IncludeSystemComponents}" />
                 <StackPanel>
-                    <TextBlock Text="Include Windows system components" VerticalAlignment="Center" />
-                    <TextBlock Text="Show hotfixes, runtimes, and hidden child entries" Opacity="0.55" FontSize="12" />
+                    <TextBlock Text="Include Windows system components" TextWrapping="Wrap" />
+                    <TextBlock Text="Show hotfixes, runtimes, and hidden child entries" Opacity="0.55" FontSize="12"
+                               TextWrapping="Wrap" />
                 </StackPanel>
-                <ui:ToggleSwitch DockPanel.Dock="Right" HorizontalAlignment="Right" IsChecked="{Binding IncludeSystemComponents}" />
             </DockPanel>
         </Border>
 
