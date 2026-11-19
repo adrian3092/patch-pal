@@ -14,7 +14,29 @@ permissions:
   id-token: write   # Azure sign-in (OpenID Connect) for code signing
 
 jobs:
+  # A tag that already has a release (published or draft) is never rebuilt, so re-pushing a tag
+  # can't replace its files or reset its download counts. Delete the release first to rebuild it.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.exists.outputs.skip }}
+    steps:
+      - name: Check for an existing release
+        id: exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]] && gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $TAG already exists; skipping the build."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
@@ -25,7 +47,8 @@ jobs:
         run: dotnet test -warnaserror
 
   build:
-    needs: test
+    needs: [check, test]
+    if: needs.check.outputs.skip != 'true'
     runs-on: windows-latest
     # Azure accepts code-signing sign-ins only from this environment.
     environment: release
